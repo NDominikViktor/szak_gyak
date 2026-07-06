@@ -1,43 +1,115 @@
-# JavaScript Runtime Comparison: Node.js, Deno, Bun
+# Node.js vs. Deno vs. Bun — saját mérések
 
-## 1. Architektonikus áttekintés
+## Áttekintés
 
-A modern JavaScript futtatókörnyezetek értékelése során az alábbi technikai szempontokat vizsgáltuk az E2EE (End-to-End Encryption) chat-alkalmazás implementációjához:
+A három JavaScript futtatókörnyezet közül a **Node.js** a legrégebbi és
+legérettebb, hatalmas npm ökoszisztémával. A **Deno** (ugyanattól a
+fejlesztőtől, Ryan Dahl-tól, aki a Node.js-t is írta) alapvető biztonsági
+modellel készült: egy script alapból semmihez sem fér hozzá
+(fájlrendszer, hálózat, környezeti változók), explicit engedélyt kell
+adni rá (pl. `--allow-net`), emellett natívan támogatja a TypeScript-et.
+A **Bun** a legújabb, elsődleges célja a sebesség: saját JS motort használ
+(JavaScriptCore, nem V8), és egyetlen eszközbe integrálja a
+csomagkezelést, a bundlert és a teszt-futtatót is.
 
-| Szempont | Node.js | Deno | Bun |
-| :--- | :--- | :--- | :--- |
-| **Engine** | V8 | V8 | JavaScriptCore |
-| **I/O Modell** | libuv (Event Loop) | tokio (Rust) | Saját (Zig-based) |
-| **Biztonság** | Nyitott (fs/net/env) | Sandbox (alapértelmezett) | Nyitott |
-| **Standard Lib** | Minimalista (npm-függő) | Teljes (Web API-k) | Teljes (Web API-k) |
-| **Package Mgmt** | npm | Built-in (deno.land/x) | Built-in (bun pm) |
+## Mérési környezet
 
+| | |
+|---|---|
+| **CPU** | 12th Gen Intel(R) Core(TM) i5-1235U (12 mag/szál) |
+| **RAM** | 16,9 GB |
+| **OS** | Windows 11 23H2 (build 22631) |
+| **Node.js** | v20.10.0 |
+| **Deno** | 2.9.1 |
+| **Bun** | 1.3.14 |
 
+A mérések ugyanazon a gépen, egymás után, azonos szkriptekkel készültek
+(`encrypt-benchmark.mjs`, `server.mjs`), hogy az eredmények közvetlenül
+összevethetők legyenek.
 
-## 2. Benchmark Metodika és Környezet
+## 1. Titkosítási művelet ideje (AES-GCM, 100 iteráció/méret)
 
-A mérések célja a futtatókörnyezetek startup idejének és CPU-intenzív feladatok (AES-GCM titkosítás) feldolgozási sebességének vizsgálata.
+### 100 byte
 
-**Hardver specifikáció:**
-- **CPU:** Intel Core i7-12700H (14 mag, 20 szál)
-- **RAM:** 16GB DDR4
-- **OS:** Windows 11 Pro 22H2
-- **Runtime verziók:** Node.js v20.x, Deno v1.x, Bun v1.x
+| Runtime | Átlag (ms) | Szórás | Min | Max | p50 | p95 |
+|---|---|---|---|---|---|---|
+| Node.js | 0,199 | 0,109 | 0,034 | 0,860 | 0,184 | 0,382 |
+| Deno | 0,247 | 0,479 | 0,023 | 4,916 | 0,196 | 0,382 |
+| Bun | 0,087 | 0,352 | 0,007 | 3,558 | 0,043 | 0,153 |
 
-**Módszertan:**
-- **JIT Bemelegedés:** A terheléses teszteket 10 másodperces "warm-up" szakaszok után értékeltük ki a V8/JSC JIT-fordítási effektusok normalizálása érdekében.
-- **Statisztikai szignifikancia:** A titkosítási műveleteket $n=100$ iterációval futtattuk, ahol az eredményekből átlagot és szórást (standard deviation) számítottunk.
-- **Latency mérés:** A `p97.5` percentilis érték a *tail latency*-t mutatja, ami az E2EE chat-üzenetek késleltetésének kritikus mérőszáma.
+### 1 000 byte
 
-## 3. Technikai elemzés
+| Runtime | Átlag (ms) | Szórás | Min | Max | p50 | p95 |
+|---|---|---|---|---|---|---|
+| Node.js | 0,075 | 0,057 | 0,034 | 0,373 | 0,039 | 0,174 |
+| Deno | 0,161 | 0,062 | 0,042 | 0,281 | 0,181 | 0,247 |
+| Bun | 0,074 | 0,038 | 0,013 | 0,219 | 0,064 | 0,153 |
 
-1. **V8 vs JavaScriptCore:** Míg a Node.js és a Deno a V8 motort használják (erős JIT-optimalizáció), a Bun JavaScriptCore-t alkalmaz. A Bun-nál tapasztalt gyorsabb "cold start" a JavaScriptCore memória-kezeléséből és a Zig-ben írt alacsony szintű I/O rétegből fakad.
-2. **I/O Modell:** A Deno a `tokio` (Rust) keretrendszert használja az aszinkron műveletekhez, ami a nagy párhuzamosságot igénylő szerveroldali feladatoknál (pl. egyidejű chat-üzenetek) biztonságosabb memóriakezelést és kiszámíthatóbb szálkezelést (thread management) biztosít a Node.js `libuv` implementációjával szemben.
-3. **Security (Sandboxing):** Az E2EE alkalmazásoknál a "támadási felület" (attack surface) minimalizálása kulcsfontosságú. A Deno alapértelmezett sandbox modellje (engedélyek kezelése fájlrendszerhez és hálózathoz) mérnöki szempontból előnyösebb környezetet nyújt, mint a Node.js hagyományos, mindent engedélyező modellje.
+### 10 000 byte
 
-## 4. Konklúzió és Döntés
+| Runtime | Átlag (ms) | Szórás | Min | Max | p50 | p95 |
+|---|---|---|---|---|---|---|
+| Node.js | 0,049 | 0,031 | 0,036 | 0,204 | 0,039 | 0,117 |
+| Deno | 0,196 | 0,070 | 0,084 | 0,498 | 0,190 | 0,310 |
+| Bun | 0,117 | 0,300 | 0,045 | 3,092 | 0,081 | 0,148 |
 
-Bár a **Bun** teljesítménye kiemelkedő a nyers HTTP throughput-ban, és a **Deno** architekturális biztonsága (sandboxing) ideális az E2EE-hez, a fejlesztési fázisban a **Node.js** mellett döntöttünk.
+### 100 000 byte
 
-**Indoklás:**
-A Node.js érett ökoszisztémája és a kriptográfiai könyvtárakhoz (pl. `node:crypto`, `libsodium`) való széleskörű, natív C++ kötései (bindings) garantálják az implementáció stabilitását. A Deno és a Bun alternatívaként a jövőbeni fázisokban (főleg a szerveroldali párhuzamosítás optimalizálásakor) jöhet szóba, amennyiben a Node.js `libuv` event-loop korlátai szűk keresztmetszetté válnak a megnövekedett üzenetforgalom mellett.
+| Runtime | Átlag (ms) | Szórás | Min | Max | p50 | p95 |
+|---|---|---|---|---|---|---|
+| Node.js | 0,166 | 0,092 | 0,081 | 0,518 | 0,162 | 0,329 |
+| Deno | 0,578 | 0,126 | 0,327 | 0,845 | 0,633 | 0,734 |
+| Bun | 0,230 | 0,433 | 0,070 | 3,638 | 0,159 | 0,414 |
+
+### 1 000 000 byte (1 MB)
+
+| Runtime | Átlag (ms) | Szórás | Min | Max | p50 | p95 |
+|---|---|---|---|---|---|---|
+| Node.js | 1,003 | 0,466 | 0,441 | 3,525 | 0,861 | 1,990 |
+| Deno | 4,737 | 0,804 | 3,783 | 7,212 | 4,365 | 6,303 |
+| Bun | 0,802 | 0,491 | 0,469 | 3,212 | 0,687 | 1,926 |
+
+!!! note "Megfigyelés"
+    1 MB-os üzeneteknél a Deno kb. 4,7×-ese lassabb, mint a Node.js vagy a
+    Bun — ez a WebCrypto implementációjának eltérő belső optimalizálására
+    utalhat nagy adatmennyiségnél. Kisebb (100 byte – 10 KB) üzeneteknél a
+    Bun konzisztensen a leggyorsabb vagy a Node.jshoz hasonló, a Deno
+    viszont már itt is lassabb. A szórás minden runtime-nál jelentős a kis
+    méreteknél (pl. Bun 100 byte-nál: szórás 0,352 ms egy 0,087 ms-os
+    átlaghoz képest) — ez a mérési zaj és a JIT-bemelegedés hatását
+    mutatja, nem feltétlenül a runtime valódi, stabil teljesítményét.
+
+## 2. HTTP terheléses teszt (`autocannon`, 10 párhuzamos kapcsolat, 10 mp)
+
+| Runtime | Átlagos req/mp | Átlagos latency | p97.5 latency | Összes kérés (10 mp alatt) |
+|---|---|---|---|---|
+| Node.js | 15 614,8 | 0,11 ms | 1 ms | 156 000 |
+| Deno | 9 111,2 | 0,55 ms | 2 ms | 91 000 |
+| Bun | 6 172,0 | 1,04 ms | 6 ms | 62 000 |
+
+!!! warning "Fontos korlátozás"
+    Ez az eredmény **nem** a Bun általánosan hangoztatott nyers
+    sebességi előnyét tükrözi. A teszt szándékosan a Node.js beépített
+    `node:http` API-ját használta mindhárom runtime-on (kompatibilitási
+    rétegen keresztül Deno-ban és Bun-ban), hogy a kód azonos legyen. A
+    Bun saját, natív `Bun.serve()` API-ja és a Deno saját `Deno.serve()`
+    API-ja ennél lényegesen jobb throughput-ot szokott adni a köztük lévő
+    benchmarkokban — ez itt viszont nem a natív implementációt, hanem a
+    Node.js-kompatibilitási réteg teljesítményét méri. Ez fontos
+    módszertani tanulság: **a "gyorsabb runtime" állítás nagyban függ
+    attól, hogy natív vagy kompatibilitási API-t használunk.**
+
+## Következtetés a projekthez
+
+A saját mérések alapján a **Node.js** maradt a legjobb, legkiegyensúlyozottabb
+választás ezen a gépen, mind titkosításnál (kis és közepes
+üzenetméreteknél versenyképes, 1 MB-nál a Bun-nal gyakorlatilag azonos),
+mind HTTP-terhelésnél (a `node:http` kompatibilitási réteg itt nála volt
+a leggyorsabb).
+
+A projekt szempontjából emellett továbbra is a Node.js mellett szól az
+érett ökoszisztéma, az npm-kompatibilitás, és a `worker_threads` modul,
+amit a szerveroldali párhuzamosításnál tervezünk használni. A Deno és a
+Bun natív API-jainak (`Deno.serve`, `Bun.serve`) kipróbálása jövőbeli
+optimalizálási lépésként érdekes lehet, ha a `node:http` réteg szűk
+keresztmetszetté válna éles terhelés alatt.
