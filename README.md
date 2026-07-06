@@ -10,7 +10,15 @@ futtatható, XMPP-elvek (nyílt, decentralizált, strukturált
 **Konzulens:** Piller Imre
 **Intézmény:** Matematikai Intézet
 
-## A dokumentáció megtekintése
+## 📖 Dokumentáció
+
+**Élő dokumentáció:** [https://NDominikViktor.github.io/szak_gyak/](https://NDominikViktor.github.io/szak_gyak/)
+
+A `docs/` mappa a dokumentáció *forrása* (Markdown fájlok), nem a végleges
+megjelenítési forma — a fenti linken érhető el a lebuildelt, böngészhető
+változat.
+
+## A dokumentáció felépítése
 
 A teljes dokumentáció [MkDocs](https://www.mkdocs.org/) segítségével
 készült, a [Material for
