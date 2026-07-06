@@ -1,57 +1,54 @@
 # Munkanapló
 
+A napló egyes bejegyzései **20 perc és 2 óra közötti** feladatblokkokat
+takarnak, egy `típus` címkével, hogy automatikusan is összesíthető legyen.
+
+**Használt típusok:** `research` (utánanézés/olvasás), `setup`
+(környezet/eszköz beállítása), `coding` (kódírás), `writing`
+(dokumentáció írása), `measurement` (mérés/benchmark futtatás).
+
 ## 2026.07.02. (csütörtök)
 
-**Időtartam:** 13:00 – 20:37 (kb. 7,5 óra, közte szünetekkel)
-
-**Elvégzett feladatok:**
-
-- MkDocs telepítése és beüzemelése (`pip install mkdocs mkdocs-material`,
-  Windows PATH-probléma megoldása `python -m mkdocs` használatával)
-- Alap projektstruktúra létrehozása (`mkdocs new`), `mkdocs.yml` konfiguráció
-  összeállítása Material témával, MathJax/képlet-támogatással
-- Git haladó szintű áttekintése: branch-stratégiák (trunk-based vs. Git Flow
-  vs. GitHub Flow), interaktív git gyakorlás
-- Statikus dokumentáció-generátorok összehasonlítása (MkDocs, Docusaurus,
-  VuePress, Hugo) — indoklás az MkDocs Material választásra
-- JavaScript nyelv / ECMAScript szabványok áttekintésének megkezdése
-  (ES5 – ES2020, MDN guide alapján)
+| Kezdés | Vég | Típus | Feladat |
+|---|---|---|---|
+| 13:00 | 13:40 | setup | MkDocs + mkdocs-material telepítése, Windows PATH-probléma megoldása (`python -m mkdocs`) |
+| 13:40 | 14:20 | setup | Projektstruktúra létrehozása (`mkdocs new`), `mkdocs.yml` konfigurálása Material témával, MathJax támogatással |
+| 14:20 | 15:30 | research | Git branch-stratégiák áttekintése (trunk-based, git flow, github flow) |
+| 15:30 | 16:00 | writing | Git workflow összefoglaló megírása |
+| 16:00 | 17:00 | research | Dokumentáció-generátorok (MkDocs, Docusaurus, VuePress, Hugo) áttekintése |
+| 17:00 | 17:30 | writing | Doc-generátor összehasonlítás megírása |
+| 17:30 | 20:37 | research | JavaScript nyelv / ECMAScript szabványok áttekintése (ES5-ES2020) |
 
 ## 2026.07.03. (péntek)
 
-**Időtartam:** 14:00 – 19:12
-
-**Elvégzett feladatok:**
-
-- Node.js vs. Deno vs. Bun összehasonlítás lezárása: két különböző, 2026-os
-  benchmark-forrás adatainak összevetése, az eltérések okainak feltárása
-  (szintetikus vs. valós terhelésű mérés), közös következtetések
-  megfogalmazása
-- Chat alkalmazás alternatívák összesítése két szinten:
-    - protokoll szinten: XMPP, Matrix, Signal összehasonlítása
-      (erőforrásigény, E2EE-alapértelmezettség, self-hosting nehézsége)
-    - konkrét alkalmazás szinten: Snikket, Element, Conversations/Dino,
-      SimpleX Chat, Signal, Rocket.Chat/Zulip/Mattermost áttekintése, és a
-      legközelebbi analógia (Snikket + Conversations/Dino) azonosítása a
-      saját projekthez
-- Titkosítási algoritmusok/könyvtárak összesítése: Signal Protocol/Double
-  Ratchet elve, WebCrypto API, libsodium, Noble cryptography, Node.js
-  beépített `node:crypto` modul összehasonlítása, ajánlás a projekt
-  kliens/szerver oldali titkosítási rétegéhez
+| Kezdés | Vég | Típus | Feladat |
+|---|---|---|---|
+| 14:00 | 15:00 | research | Node.js vs. Deno vs. Bun - két 2026-os benchmark-forrás összevetése |
+| 15:00 | 15:30 | writing | Node/Deno/Bun összefoglaló megírása |
+| 15:30 | 17:00 | research | Chat alkalmazás alternatívák - protokoll szint (XMPP, Matrix, Signal) |
+| 17:00 | 18:00 | research | Chat alkalmazás alternatívák - konkrét alkalmazások (Snikket, Element, Conversations/Dino, SimpleX, stb.) |
+| 18:00 | 18:30 | writing | Chat alternatívák összesítés megírása |
+| 18:30 | 19:12 | research | Titkosítási algoritmusok/könyvtárak áttekintése (WebCrypto, libsodium, Noble, node:crypto) |
 
 ## 2026.07.04. (szombat)
 
-**Elvégzett feladatok:**
+| Kezdés | Vég | Típus | Feladat |
+|---|---|---|---|
+| - | - | writing | Titkosítás összesítés véglegesítése |
+| - | - | coding | `perf_hooks` alapú titkosítási benchmark szkript megírása és futtatása |
+| - | - | coding | `autocannon` HTTP terheléses teszt szkript megírása és futtatása |
+| - | - | measurement | Eredmények rögzítése, értelmezése |
 
-- JS teljesítmény/memória mérés kódpéldáinak elkészítése és futtatása:
-    - `perf_hooks` alapú mérés a titkosítási művelet idejéről különböző
-      üzenetméreteknél
-    - `autocannon` terheléses teszt egy egyszerű HTTP szerveren, két
-      egymást követő futtatással (JIT-bemelegedés megfigyelése)
-- Ezzel a tanszéki előkészítő feladatlista technikai pontjai lezárultak
+## 2026.07.06. (hétfő)
 
-**Következő lépések:**
+| Kezdés | Vég | Típus | Feladat |
+|---|---|---|---|
+| - | - | setup | Repository szerkezet javítása, git history granuláris újraépítése (Conventional Commits, angol nyelv) |
+| - | - | setup | `requirements.txt` hozzáadása |
+| - | - | setup | GitHub Pages beállítása (`mkdocs gh-deploy`) |
+| - | - | writing | README és git-workflow dokumentáció frissítése a konzulensi visszajelzés alapján |
 
-- Az összegyűjtött anyagok végleges MkDocs oldalakká rendezése (folyamatban,
-  ez a dokumentáció maga)
-- Feltöltés a repóba, majd jelzés a konzulensnek
+!!! note "Megjegyzés a pontos időkről"
+    A 07.04. és 07.06. napok pontos óra:perc bontása utólag pontosítandó -
+    a táblázat szerkezete attól kezdve alkalmazandó, hogy valós időben,
+    munka közben vezetjük a naplót.
