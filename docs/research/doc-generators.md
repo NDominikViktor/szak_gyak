@@ -1,25 +1,58 @@
-# Technical Comparison: Documentation Generators
+# Dokumentáció-generátorok — technikai összehasonlítás
 
-To determine the optimal tool for technical documentation requiring mathematical notation support and version control integration, the following generators were evaluated based on their architectural and CI/CD characteristics:
+A cél annak eldöntése volt, melyik eszköz alkalmas legjobban technikai
+dokumentációra, amelyben matematikai jelölésrendszer (képletek) és
+verziókövetés-barát forrás egyaránt fontos szempont.
 
-| Feature | MkDocs (Material) | Docusaurus | Hugo |
-| :--- | :--- | :--- | :--- |
-| **Renderelési modell** | Statikus (Python/Jinja2) | Reaktív (React/SPA) | Statikus (Go) |
-| **Függőségi lánc** | Python (pip), izolált | Node.js (npm), komplex | Go (bináris) |
-| **Képletmegjelenítés** | Native (KaTeX/MathJax) | Plugin-függő (Remark) | Native (Goldmark) |
-| **Verziókezelés** | Git-native (file-based) | Komplex (i18n/versioning) | File-based |
-| **Build pipeline** | Egyszerű, determinisztikus | Webpack/Vite alapú | Ultra-gyors Go bináris |
+| Szempont | MkDocs (Material) | Docusaurus | VuePress | Hugo |
+|---|---|---|---|---|
+| **Renderelési modell** | statikus (Python/Jinja2) | reaktív (React/SPA) | reaktív (Vue/SPA) | statikus (Go) |
+| **Függőségi lánc** | Python (pip), izolált a Node-alapú projekttől | Node.js (npm), komplex build-lánc | Node.js (npm), Vue-ökoszisztéma | Go (egyetlen bináris) |
+| **Képletmegjelenítés** | natív (KaTeX/MathJax integráció) | plugin-függő (Remark-alapú) | plugin-függő | natív (Goldmark) |
+| **Verziókövetés-barátság** | git-natív, tiszta Markdown fájlok | komplex (i18n, verziózási metaadatok) | közepes | fájl-alapú, tiszta |
+| **Build pipeline** | egyszerű, determinisztikus | Webpack/Vite-alapú, nehezebb | Vite-alapú | rendkívül gyors, egyszerű bináris |
 
-## Engineering Rationale (A választás indoklása)
+## A választás indoklása
 
-The selection of **MkDocs with the Material theme** was based on the following technical requirements:
+**1) Build-lánc izoláció.** A projekt fejlesztői környezete Node.js-alapú
+(a chat-alkalmazás szervere és kliense is JavaScript-ben készül). Egy
+Python-alapú dokumentáció-generátor (MkDocs, `pip`-en keresztül)
+teljesen elválasztja a dokumentáció build-folyamatát a projekt saját
+függőségi fájától — ez elkerüli a lehetséges `node_modules`-konfliktusokat,
+és determinisztikus, egyszerű build-folyamatot biztosít.
 
-1.  **Build Pipeline Isolation:** The project's primary development environment is Node.js-based. Utilizing a Python-based documentation generator (pip) ensures complete decoupling of the documentation build process from the project's dependency tree. This prevents potential `node_modules` conflicts and ensures a deterministic build pipeline.
+**2) SSR/hidratáció overhead.** A Docusaurus és a VuePress is
+Single Page Application (SPA) architektúrát használ (React, illetve
+Vue), ami "hidratációt" (kliensoldali runtime-inicializálást) igényel
+minden oldalbetöltésnél. Az MkDocs ezzel szemben build-időben tiszta,
+statikus HTML-t generál, ami jobb betöltési teljesítményt és jobb
+keresőmotor-indexelhetőséget garantál, futásidejű JavaScript-függőség
+nélkül.
 
+**3) Matematikai pontosság.** A benchmark-eredmények (eloszlás, szórás,
+percentilis) megbízható LaTeX-alapú képlet-megjelenítést igényelnek. Az
+MkDocs Material natív KaTeX/MathJax-integrációt ad, ami megbízhatóan
+működik — a Docusaurus/VuePress Remark-plugin-alapú megoldásainál
+tapasztalt runtime JavaScript verziókonfliktusok nélkül.
 
+**4) Verziókövetési hatékonyság.** Mivel a projekt trunk-based
+fejlesztési modellt követ, a merge-konfliktusok feloldhatósága fontos
+szempont. Az MkDocs a dokumentációt szigorúan Markdown fájlokban tárolja,
+minimális metaadat-zajjal — ez tisztább, kezelhetőbb git diff-eket
+eredményez, mint a sablon-nehéz vagy SPA-metaadat-gazdag alternatívák.
 
-2.  **SSR vs. Hydration Overhead:** Docusaurus (React-based) uses a Single Page Application (SPA) architecture, introducing "hydration" (client-side runtime initialization) overhead. MkDocs generates pure, static HTML at build-time, which guarantees optimal page load performance and superior search engine indexing without runtime JavaScript dependencies.
+## A Hugo kimaradásának oka
 
-3.  **Mathematical Integrity:** Benchmark metrics (statistical distribution, standard deviation, p99) require robust LaTeX rendering. MkDocs Material provides native KaTeX/MathJax integration that functions reliably without the runtime JavaScript versioning conflicts often observed in Remark-plugin-based React implementations.
+A Hugo build-sebessége kiemelkedő, és több ezer oldalas
+dokumentációknál ez döntő szempont lehet. Ennél a projektnél viszont a
+dokumentáció mérete (néhány tucat oldal) miatt ez az előny nem
+számottevő, ugyanakkor a Go template-szintaxis tanulása és a kevésbé
+kiforrott matematikai jelölés-támogatás felesleges többletmunkát
+jelentene egy ilyen léptékű projektnél.
 
-4.  **Version Control Efficiency:** As a project utilizing trunk-based development, the ability to resolve merge conflicts is critical. MkDocs maintains documentation in strict Markdown files, minimizing metadata clutter and resulting in clean, manageable Git diffs compared to the templating-heavy or SPA-meta-data-rich alternatives.
+## Végső döntés
+
+**MkDocs + Material** — a build-lánc izolációja, a natív statikus HTML-
+kimenet, a beépített matematikai jelölés-támogatás és a git-barát
+Markdown-forrás együttesen ezt teszik a legmegfelelőbb választássá ehhez
+a projekthez.
