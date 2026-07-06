@@ -82,6 +82,12 @@ development** egyszerűsített változata a legésszerűbb: rövid életű featu
 branch-ek a `main` mellett, gyakori, kis commitokkal, [Conventional
 Commits](https://www.conventionalcommits.org/en/v1.0.0/) formátumban.
 
+**Ez a projekt ténylegesen is így működik:** minden módosítás közvetlenül
+(vagy rövid életű, gyorsan visszamerge-elt ágakon) a `main`-re kerül,
+angol nyelvű, típusolt (Conventional Commits) commit üzenetekkel, egy-egy
+logikai munkalépésre bontva (pl. `docs: ...`, `feat: ...`, `chore: ...`).
+Ez látható is a repository commit history-jában.
+
 ## Conventional Commits
 
 A [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
