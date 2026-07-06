@@ -1,0 +1,46 @@
+site_name: Szakmai gyakorlat - Novák Dominik
+site_description: Nyári szakmai gyakorlat dokumentációja - E2EE üzenetküldő rendszer fejlesztése
+
+theme:
+  name: material
+  language: hu
+  palette:
+    scheme: slate
+    primary: indigo
+    accent: indigo
+  features:
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Kezdőlap: index.md
+  - Munkanapló: worklog.md
+  - Kutatás / előkészítés:
+      - Git workflow: research/git-workflow.md
+      - Dokumentáció-generátorok: research/doc-generators.md
+      - JavaScript / ECMAScript: research/js-ecmascript.md
+      - Node.js vs Deno vs Bun: research/node-deno-bun.md
+      - Chat alkalmazás alternatívák: research/chat-alternatives.md
+      - Titkosítás (E2EE): research/encryption.md
+  - Benchmark:
+      - Teljesítmény- és memóriamérés: benchmarks/perf-hooks-example.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css: []
