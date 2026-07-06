@@ -1,27 +1,25 @@
-# Dokumentáció-generátorok összehasonlítása
+# Technical Comparison: Documentation Generators
 
-A [jamstack.org/generators](https://jamstack.org/generators/) lista alapján
-a legelterjedtebb, kifejezetten dokumentációra használt static site
-generatorok:
+To determine the optimal tool for technical documentation requiring mathematical notation support and version control integration, the following generators were evaluated based on their architectural and CI/CD characteristics:
 
-| Eszköz | Nyelv/motor | Tanulási görbe | Erősség | Gyengeség |
-|---|---|---|---|---|
-| **MkDocs (+ Material)** | Python | nagyon alacsony | egyetlen YAML config, gyors beüzemelés, kiváló beépített keresés a Material témával | kevésbé rugalmas, ha komplex interaktív komponens kéne |
-| **Docusaurus** | React/Node.js | közepes–magas | verziózás, i18n, MDX (React komponens Markdownban), erős közösség (Meta mögötte) | Node+React toolchain nehezebb, "túl sok" egy kis projektnek |
-| **VuePress** | Vue/Node.js | közepes | Vue-alapú, jó ha valaki már ismeri a Vue-t, hasonló élmény mint a Docusaurus, csak Vue-val | kisebb közösség, mint a Docusaurus-nak, ami hatással lehet a témák és bővítmények elérhetőségére |
-| **Hugo** | Go | magas | extrém gyors build, nagy (több ezer oldalas) dokumentációnál ideális, ahol a build idő szűk keresztmetszetté válhat | a Go template szintaxis nehézkes kezdőknek |
+| Feature | MkDocs (Material) | Docusaurus | Hugo |
+| :--- | :--- | :--- | :--- |
+| **Renderelési modell** | Statikus (Python/Jinja2) | Reaktív (React/SPA) | Statikus (Go) |
+| **Függőségi lánc** | Python (pip), izolált | Node.js (npm), komplex | Go (bináris) |
+| **Képletmegjelenítés** | Native (KaTeX/MathJax) | Plugin-függő (Remark) | Native (Goldmark) |
+| **Verziókezelés** | Git-native (file-based) | Komplex (i18n/versioning) | File-based |
+| **Build pipeline** | Egyszerű, determinisztikus | Webpack/Vite alapú | Ultra-gyors Go bináris |
 
-## Választás indoklása
+## Engineering Rationale (A választás indoklása)
 
-A projekthez az **MkDocs + Material** kombináció mellett döntöttünk:
+The selection of **MkDocs with the Material theme** was based on the following technical requirements:
 
-- egyszemélyes, kis léptékű dokumentációról van szó, nem kell a Docusaurus
-  vagy Hugo által kínált skálázhatóság
-- Python-alapú, egyetlen YAML konfigurációs fájllal működik — nem igényel
-  külön Node.js build-láncot a dokumentációhoz, miközben a projekt maga
-  Node.js-ben készül
-- a Material téma önmagában hozza a beépített keresést és a
-  MathJax/KaTeX-alapú képlet-megjelenítést, ami a benchmark-eredmények
-  bemutatásához hasznos
-- a betanulási görbe a legalacsonyabb a felsoroltak közül, ami egy nyári
-  gyakorlat időkeretében fontos szempont
+1.  **Build Pipeline Isolation:** The project's primary development environment is Node.js-based. Utilizing a Python-based documentation generator (pip) ensures complete decoupling of the documentation build process from the project's dependency tree. This prevents potential `node_modules` conflicts and ensures a deterministic build pipeline.
+
+
+
+2.  **SSR vs. Hydration Overhead:** Docusaurus (React-based) uses a Single Page Application (SPA) architecture, introducing "hydration" (client-side runtime initialization) overhead. MkDocs generates pure, static HTML at build-time, which guarantees optimal page load performance and superior search engine indexing without runtime JavaScript dependencies.
+
+3.  **Mathematical Integrity:** Benchmark metrics (statistical distribution, standard deviation, p99) require robust LaTeX rendering. MkDocs Material provides native KaTeX/MathJax integration that functions reliably without the runtime JavaScript versioning conflicts often observed in Remark-plugin-based React implementations.
+
+4.  **Version Control Efficiency:** As a project utilizing trunk-based development, the ability to resolve merge conflicts is critical. MkDocs maintains documentation in strict Markdown files, minimizing metadata clutter and resulting in clean, manageable Git diffs compared to the templating-heavy or SPA-meta-data-rich alternatives.
