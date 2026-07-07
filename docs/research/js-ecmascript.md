@@ -25,3 +25,25 @@ repó](https://github.com/tc39/proposals).
   üzenetsorok kezelésére a szerveroldalon
 - **Modulok (`import`/`export`)** — a tiszta, moduláris kódstruktúra
   kialakításához, ami a projekt egyik célkitűzése volt
+
+## TypeScript
+
+A TypeScript a JavaScript egy szuperhalmaza, amely statikus típusrendszert
+ad hozzá, és fordítás (vagy futásidejű transzpilálás) során tiszta
+JavaScript-té alakul. Nem külön nyelv a JS-hez képest, hanem annak
+kiterjesztése — minden érvényes JavaScript kód egyben érvényes TypeScript
+kód is.
+
+**Miért releváns a projekthez:** a [korábban vizsgált futtatókörnyezetek
+közül](node-deno-bun.md) a Deno és a Bun natívan (külön build-lépés
+nélkül) futtat TypeScript fájlokat, a Node.js-hez pedig `tsc` vagy
+`ts-node`/`tsx` szükséges. Egy TypeScript alapú átálláshoz a fő előny a
+korai hibafelismerés lenne (pl. az üzenetstruktúrák, a WebSocket
+üzenettípusok vagy a titkosítási függvények paramétereinek
+típusellenőrzése fordítási időben, nem futásidőben) — ez különösen
+hasznos lehet egy olyan projektnél, ahol a kliens és szerver között
+struktúrált üzenetek (JSON payloadok) közlekednek.
+
+A jelenlegi fázisban a projekt sima JavaScript-ben készül, de a
+TypeScript-re való átállás egy ésszerű jövőbeli lépés lehet, különösen
+ha a kódbázis mérete nő.
