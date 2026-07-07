@@ -2,52 +2,87 @@
 
 ## Alapfogalom: Signal Protocol / Double Ratchet
 
+**Dokumentáció:** [signal.org/docs](https://signal.org/docs/)
+
 Az iparágban de facto szabvánnyá vált E2EE-tervezési minta — nem konkrét
 könyvtár, hanem egy algoritmus-család, amit a Signal, korábban a
 WhatsApp, a Matrix (Olm/Megolm néven), valamint az XMPP (OMEMO
 kiterjesztésen keresztül) is átvett.
 
-A lényege a "ratchet" (racsni) mechanizmus: minden üzenetváltás után új
-kulcsok generálódnak, így ha egy támadó megszerzi az aktuális kulcsot,
-azzal sem a korábbi, sem a jövőbeli üzeneteket nem tudja visszafejteni —
-ezt hívják **forward secrecy**-nek. Ezt érdemes mintaként követni a saját
-E2EE modulban is.
+**Hogyan működik röviden:** a felek egy kezdeti X3DH (Extended
+Triple Diffie-Hellman) kulcscserével hoznak létre egy közös titkot, majd
+minden egyes üzenetváltás után egy új Diffie-Hellman kulcspárt
+generálnak, és ezzel "elforgatják" (ratchet) a titkosító kulcsot. Így ha
+egy támadó megszerzi az aktuális kulcsot, azzal sem a korábbi, sem a
+jövőbeli üzeneteket nem tudja visszafejteni — ezt hívják **forward
+secrecy**-nek, illetve **post-compromise security**-nek (a jövőbeli
+üzenetek védelme egy múltbeli kompromittálódás után is helyreáll).
 
 ## WebCrypto API
 
-Böngészőbe (és Node.js-be is) beépített, natív titkosítási API, nem kell
-hozzá külön csomagot telepíteni. Előnye, hogy natívan gyors és biztonságos,
-mert a futtatókörnyezet implementálja alacsony szinten. Hátránya, hogy
-elég alacsony szintű és kényelmetlen API — mindenhol Promise-alapú, még
-egyszerű műveleteknél is. Elsősorban akkor optimális, ha a beépített
-algoritmusok (AES-GCM, ECDH, RSA) pontosan lefedik az igényeket.
+**Dokumentáció:** [MDN - Web Crypto
+API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
+
+Böngészőbe (és Node.js-be is, a `crypto.webcrypto` objektumon keresztül)
+beépített, natív titkosítási API, nem kell hozzá külön csomagot
+telepíteni. Támogatott algoritmusok közül a projekthez relevánsak: az
+**AES-GCM** (szimmetrikus, autentikált titkosítás — ezt használjuk a
+[benchmark szkriptben](../benchmarks/perf-hooks-example.md) is) és az
+**ECDH** (elliptikus görbés Diffie-Hellman kulcscsere, pl. P-256 görbével).
+Előnye, hogy natívan gyors és biztonságos, mert a futtatókörnyezet
+implementálja alacsony szinten. Hátránya, hogy elég alacsony szintű API
+— mindenhol Promise-alapú, még egyszerű műveleteknél is —, és nem
+támogat minden modern algoritmust (pl. az X25519 görbét csak újabb
+böngészőverziók óta).
 
 ## libsodium (libsodium.js)
+
+**Repó:** [github.com/jedisct1/libsodium.js](https://github.com/jedisct1/libsodium.js)
 
 Szélesebb körben auditált, több nyelvben elérhető (C, WebAssembly-vel
 JS-re fordítva) kriptográfiai könyvtár, magasabb szintű, kényelmesebb
 API-val, mint a nyers WebCrypto. A Double Ratchet-hez szükséges
-primitíveket (X25519 kulcscsere, ChaCha20-Poly1305) is kényelmesen
-kezeli. A teljes csomag kb. 188 KB (minifikálva, gzip-elve), ami böngészős
-kliens esetén már számottevő méret.
+primitíveket kényelmesen kezeli: **X25519** (Curve25519-alapú
+kulcscsere, gyorsabb és egyszerűbb, mint a WebCrypto P-256-ja) és
+**ChaCha20-Poly1305** (AES-GCM alternatívája — szoftveres
+implementációban gyakran gyorsabb, mert nem igényel hardveres AES
+gyorsítást, ami relevánssá teszi kisebb/beágyazott eszközöknél). A teljes
+csomag kb. 188 KB (minifikálva, gzip-elve), ami böngészős kliens esetén
+már számottevő méret.
 
 ## Noble cryptography
 
-Tisztán JavaScript-ben írt könyvtár-család (külön csomagok: ciphers,
-hashes, curves, post-kvantum algoritmusok), moduláris felépítéssel — egy
+**Repó:** [github.com/paulmillr/noble-ciphers](https://github.com/paulmillr/noble-ciphers)
+(és testvér-csomagjai: `noble-hashes`, `noble-curves`)
+
+Tisztán JavaScript-ben írt könyvtár-család, moduláris felépítéssel — egy
 jó bundler csak azt a kódot húzza be, amire ténylegesen szükség van
-(tree-shaking). Ajánlott választás, amikor a WebCrypto nem fedi le az
-igényt (pl. Curve25519/X25519 művelet, amit a WebCrypto natívan nem
-támogat minden környezetben).
+(tree-shaking), szemben a libsodium egyben-jövő WASM-bináris méretével.
+Ajánlott választás, amikor a WebCrypto nem fedi le az igényt (pl.
+Curve25519/X25519 művelet régebbi böngészőkben).
 
 ## Node.js beépített `node:crypto` modul
 
-Node 20+ óta jelentősen kényelmesebbé vált. Van rá 2026-os példa, hogy
-valaki teljesen külső függőség nélkül épített E2EE-t vele (Ed25519 hosszú
-távú identitáshoz, X25519 ideiglenes session-kulcsokhoz) — bár ilyenkor
-magának kell megoldani olyan dolgokat, mint a valódi forward secrecy
-(kulcs-racsnizás) és a kulcscsere hitelesítése, amit egy kész könyvtár már
-megad.
+**Dokumentáció:** [nodejs.org/api/crypto.html](https://nodejs.org/api/crypto.html)
+
+Node 20+ óta jelentősen kényelmesebbé vált, és tartalmazza a
+`crypto.webcrypto` objektumot is (ugyanaz az API, mint böngészőben). Van
+rá 2026-os példa, hogy valaki teljesen külső függőség nélkül épített
+E2EE-t vele (**Ed25519** hosszú távú identitáshoz — ez az EdDSA aláíró
+algoritmus Curve25519 fölött, **X25519** ideiglenes session-kulcsokhoz) —
+bár ilyenkor magának kell megoldania olyan dolgokat, mint a valódi
+forward secrecy (kulcs-racsnizás) és a kulcscsere hitelesítése, amit egy
+kész könyvtár már megad.
+
+## Algoritmus-összehasonlítás
+
+| Algoritmus | Típus | Hol használjuk | Megjegyzés |
+|---|---|---|---|
+| **AES-GCM** | szimmetrikus, autentikált titkosítás | üzenettartalom titkosítása | hardveres gyorsítással (AES-NI) nagyon gyors modern CPU-kon; ezt méri a [benchmark](../benchmarks/perf-hooks-example.md) |
+| **ChaCha20-Poly1305** | szimmetrikus, autentikált titkosítás | AES-GCM alternatívája | szoftveresen gyakran gyorsabb, ha nincs hardveres AES-gyorsítás |
+| **ECDH (P-256)** | aszimmetrikus kulcscsere | kezdeti közös titok létrehozása | WebCrypto natívan támogatja |
+| **X25519 (Curve25519)** | aszimmetrikus kulcscsere | Double Ratchet kulcscsere lépései | gyorsabb és egyszerűbb, mint a P-256, de a WebCrypto csak újabban támogatja natívan |
+| **Ed25519** | digitális aláírás | identitás-hitelesítés (kulcscsere aláírása) | EdDSA séma Curve25519 fölött |
 
 ## Ajánlás a projekthez
 
