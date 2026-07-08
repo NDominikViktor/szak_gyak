@@ -28,11 +28,24 @@ Matrix szerver 27,7%-ot.
 Az E2EE nála nem alapértelmezett, hanem az **OMEMO**
 ([XEP-0384](https://xmpp.org/extensions/xep-0384.html)) kiegészítésen
 keresztül érhető el, ami a Signal Protocol Double Ratchet algoritmusára
-épül, de XMPP-kompatibilis kulcscsere-mechanizmussal (PEP - Personal
-Eventing Protocol - segítségével teszi közzé a nyilvános kulcsokat).
-Mivel ez csak kiegészítés, egy szerver teljesen szabványos maradhat úgy
-is, hogy sosem támogatja az OMEMO-t. Népszerű szerver-implementációk:
-[Prosody](https://prosody.im/), [ejabberd](https://www.ejabberd.im/).
+épül, de XMPP-kompatibilis kulcscsere-mechanizmussal. A technikai
+működés dióhéjban: minden eszköz publikál egy **kulcscsomagot**
+("bundle") — egy Ed25519 azonosító kulcsot, egy aláírt PreKey-t, és
+kb. 100 egyszer-használatos PreKey-t —, amit a **PEP**
+([XEP-0163](https://xmpp.org/extensions/xep-0163.html), a Personal
+Eventing Protocol) és a mögötte lévő **PubSub**
+([XEP-0060](https://xmpp.org/extensions/xep-0060.html)) mechanizmuson
+keresztül tesz közzé. Amikor egy másik felhasználó üzenetet szeretne
+küldeni, lekéri ezt a csomagot, és ezzel indítja el az X3DH-szerű
+kezdeti kulcscserét, amit aztán a Double Ratchet visz tovább — az
+üzenettartalom titkosítására AES-256-CBC + HMAC-SHA256 kombinációt
+használ. Mivel ez az egész a meglévő XMPP-infrastruktúrára (PubSub)
+épül, **szinte semmilyen szerveroldali módosítást nem igényel** — ez
+az egyik fő oka annak, hogy OMEMO-t viszonylag könnyű hozzáadni egy
+meglévő XMPP-szerverhez. Mivel ez csak kiegészítés, egy szerver
+teljesen szabványos maradhat úgy is, hogy sosem támogatja az OMEMO-t.
+Népszerű szerver-implementációk: [Prosody](https://prosody.im/),
+[ejabberd](https://www.ejabberd.im/).
 
 ### Matrix
 
@@ -42,11 +55,23 @@ is, hogy sosem támogatja az OMEMO-t. Népszerű szerver-implementációk:
 Újabb protokoll, esemény-alapú architektúrával: minden szoba egy
 eseménygráf (DAG - Directed Acyclic Graph), amit a résztvevő szerverek
 egymás között replikálnak (hasonló elven, mint egy elosztott adatbázis).
-Az E2EE-t az **Olm** (páronkénti, Double Ratchet-alapú) és **Megolm**
-(csoportos beszélgetésekhez optimalizált, "ratchet-fa" struktúrájú)
-algoritmusok biztosítják, alapból bekapcsolva. Erős a hídépítő
-(bridging) képessége más platformok (Discord, Telegram, IRC) felé.
-Cserébe jóval nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
+Az E2EE-t az **Olm** (páronkénti, 1:1 munkamenetekhez, a Signal Protocol
+Double Ratchet-jének implementációja) és a **Megolm** (csoportos
+szobákhoz optimalizált) algoritmusok biztosítják, alapból bekapcsolva.
+A Megolm technikailag eltér az OMEMO/Signal megközelítéstől: nem
+minden résztvevőhöz külön Double Ratchet munkamenetet tart fenn (ami
+egy 200 fős szobában 199 külön munkamenetet jelentene), hanem **egy
+közös, csak-előre-forgatható (one-way) racsnit** használ szobánként és
+küldő eszközönként — ezt a kezdeti kulcsot Olm-on keresztül,
+titkosítva osztja meg minden résztvevővel. Ennek következménye egy
+tudatos biztonsági kompromisszum: aki megszerzi egy adott ponton a
+racsni állapotát, **onnantól előre** tud minden üzenetet visszafejteni
+(amíg a kliens újra nem indítja a munkamenetet), viszont a korábbi
+üzeneteket nem — ez gyengébb garancia, mint az OMEMO/Signal
+üzenetenkénti kulcsváltása, cserébe nagy létszámú szobáknál
+számításigényben sokkal hatékonyabb. Erős a hídépítő (bridging)
+képessége más platformok (Discord, Telegram, IRC) felé. Cserébe jóval
+nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 ([Synapse](https://github.com/element-hq/synapse)) admin oldalról
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. [Conduit](https://conduit.rs/)) ezen próbálnak javítani.
@@ -94,3 +119,6 @@ A tervezett projekt ennek egy saját fejlesztésű, Node.js-alapú, webes
 (HTML/JS kliens) változata, ugyanazokkal az alapelvekkel (nyílt,
 decentralizált, strukturált üzenetküldés), a Rocket.Chat/Zulip/Mattermost-féle
 nehezebb platformoknál jóval egyszerűbb, minimálisabb célkitűzéssel.
+
+A tervezett rendszer komponenseinek felépítése az
+[Architektúra](../architecture.md) oldalon található ábrán látható.
