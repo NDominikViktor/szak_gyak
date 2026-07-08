@@ -59,8 +59,14 @@ Futtatás: `node encrypt-benchmark.js`
 
 ### Eredmény
 
+!!! info "Frissebb, kibővített mérés"
+    Ez az eredeti (első körös) mérés — a kibővített, warm-up-kiszűrt és
+    mindhárom futtatókörnyezetre (Node/Deno/Bun) elvégzett verzió a
+    [Node.js vs. Deno vs. Bun](../research/node-deno-bun.md) oldalon
+    található.
+
 | Üzenetméret | Átlagos titkosítási idő |
-|---|---|
+|---:|---:|
 | 100 byte | 0,430 ms |
 | 1 000 byte | 0,324 ms |
 | 10 000 byte | 0,389 ms |
@@ -116,7 +122,7 @@ autocannon -m POST -b '{"message":"teszt üzenet"}' -c 10 -d 10 http://localhost
 ### Eredmény (két egymást követő futtatás)
 
 | Futtatás | Átlagos req/mp | Átlagos latency | p97.5 latency |
-|---|---|---|---|
+|---|---:|---:|---:|
 | 1. kör | 5 221,9 | 1,43 ms | 5 ms |
 | 2. kör | 6 787,2 | 0,95 ms | 3 ms |
 
