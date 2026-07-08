@@ -202,6 +202,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architektúra
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../worklog/" class="md-tabs__link">
         
   
@@ -324,6 +343,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architektúra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../worklog/" class="md-nav__link">
         
   
@@ -367,10 +413,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -388,8 +434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -722,10 +768,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -743,8 +789,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -922,90 +968,133 @@ szerveren futtatható, minimalista, végpontok között titkosított
 üzenetküldő rendszer, XMPP-elvekre építve.</p>
 <h2 id="protokoll-szint">Protokoll szint<a class="headerlink" href="#protokoll-szint" title="Permanent link">&para;</a></h2>
 <h3 id="xmpp">XMPP<a class="headerlink" href="#xmpp" title="Permanent link">&para;</a></h3>
-<p>1999-ben, eredetileg Jabber néven indult, azóta az IETF szabványosította
-(RFC 3920/3921, majd 6120/6121), és mára több mint 400 kiegészítő
-protokoll (XEP) épült rá. Ez pontosan az az irány, amit a projekt is
-követ: könnyű, saját hosting-ra alkalmas, decentralizált protokoll.</p>
+<p><strong>Hivatalos oldal:</strong> <a href="https://xmpp.org/">xmpp.org</a> | <strong>Szabvány:</strong>
+<a href="https://datatracker.ietf.org/doc/html/rfc6120">RFC 6120</a> (core),
+<a href="https://datatracker.ietf.org/doc/html/rfc6121">RFC 6121</a> (IM)</p>
+<p>1999-ben, eredetileg Jabber néven indult, azóta az IETF szabványosította,
+és mára több mint 400 kiegészítő protokoll (XEP) épült rá. Az üzenetek
+XML-alapú "stanza"-kban (<code>&lt;message&gt;</code>, <code>&lt;presence&gt;</code>, <code>&lt;iq&gt;</code>) közlekednek
+egy folyamatosan nyitva tartott TCP-kapcsolaton keresztül. Ez pontosan az
+az irány, amit a projekt is követ: könnyű, saját hosting-ra alkalmas,
+decentralizált protokoll (federáció: különböző szerverek felhasználói
+tudnak egymással kommunikálni, mint az e-mailnél).</p>
 <p>Erőforrás-igénye kifejezetten alacsony — egy 1 GB RAM-os VPS-en egy XMPP
 szerver a memória mindössze kb. 1,4%-át használta, míg egy ugyanott futó
-Matrix szerver 27,7%-ot — ami family/kisközösségi self-hosting esetén
-jelentős különbség.</p>
-<p>Az E2EE nála nem alapértelmezett, hanem az <strong>OMEMO</strong> kiegészítésen
+Matrix szerver 27,7%-ot.</p>
+<p>Az E2EE nála nem alapértelmezett, hanem az <strong>OMEMO</strong>
+(<a href="https://xmpp.org/extensions/xep-0384.html">XEP-0384</a>) kiegészítésen
 keresztül érhető el, ami a Signal Protocol Double Ratchet algoritmusára
-épül. Mivel ez csak kiegészítés, egy szerver teljesen szabványos maradhat
-úgy is, hogy sosem támogatja az OMEMO-t — a titkosítás lefedettsége azon
-múlik, milyen kliens-szerver kombinációt futtatnak a felhasználók.
-Népszerű szerver-implementációk: <strong>Prosody</strong>, <strong>ejabberd</strong>.</p>
+épül, de XMPP-kompatibilis kulcscsere-mechanizmussal. A technikai
+működés dióhéjban: minden eszköz publikál egy <strong>kulcscsomagot</strong>
+("bundle") — egy Ed25519 azonosító kulcsot, egy aláírt PreKey-t, és
+kb. 100 egyszer-használatos PreKey-t —, amit a <strong>PEP</strong>
+(<a href="https://xmpp.org/extensions/xep-0163.html">XEP-0163</a>, a Personal
+Eventing Protocol) és a mögötte lévő <strong>PubSub</strong>
+(<a href="https://xmpp.org/extensions/xep-0060.html">XEP-0060</a>) mechanizmuson
+keresztül tesz közzé. Amikor egy másik felhasználó üzenetet szeretne
+küldeni, lekéri ezt a csomagot, és ezzel indítja el az X3DH-szerű
+kezdeti kulcscserét, amit aztán a Double Ratchet visz tovább — az
+üzenettartalom titkosítására AES-256-CBC + HMAC-SHA256 kombinációt
+használ. Mivel ez az egész a meglévő XMPP-infrastruktúrára (PubSub)
+épül, <strong>szinte semmilyen szerveroldali módosítást nem igényel</strong> — ez
+az egyik fő oka annak, hogy OMEMO-t viszonylag könnyű hozzáadni egy
+meglévő XMPP-szerverhez. Mivel ez csak kiegészítés, egy szerver
+teljesen szabványos maradhat úgy is, hogy sosem támogatja az OMEMO-t.
+Népszerű szerver-implementációk: <a href="https://prosody.im/">Prosody</a>,
+<a href="https://www.ejabberd.im/">ejabberd</a>.</p>
 <h3 id="matrix">Matrix<a class="headerlink" href="#matrix" title="Permanent link">&para;</a></h3>
-<p>Újabb protokoll, esemény-alapú architektúrával, ahol minden beszélgetés
-egy elosztott adatbázisban tárolódik és a résztvevő szerverek között
-replikálódik. Előnye, hogy az E2EE alapból, kikapcsolás nélkül aktív
-minden csevegésben és privát szobában, és erős a hídépítő (bridging)
-képessége más platformok felé. Cserébe jóval nagyobb erőforrást igényel,
-és a hivatalos szerver-szoftver (Synapse) admin oldalról nehézkesebb,
-kevesebb konfigurációs lehetőséggel, mint az XMPP szerverek.</p>
+<p><strong>Hivatalos oldal:</strong> <a href="https://matrix.org/">matrix.org</a> | <strong>Specifikáció:</strong>
+<a href="https://spec.matrix.org/">spec.matrix.org</a></p>
+<p>Újabb protokoll, esemény-alapú architektúrával: minden szoba egy
+eseménygráf (DAG - Directed Acyclic Graph), amit a résztvevő szerverek
+egymás között replikálnak (hasonló elven, mint egy elosztott adatbázis).
+Az E2EE-t az <strong>Olm</strong> (páronkénti, 1:1 munkamenetekhez, a Signal Protocol
+Double Ratchet-jének implementációja) és a <strong>Megolm</strong> (csoportos
+szobákhoz optimalizált) algoritmusok biztosítják, alapból bekapcsolva.
+A Megolm technikailag eltér az OMEMO/Signal megközelítéstől: nem
+minden résztvevőhöz külön Double Ratchet munkamenetet tart fenn (ami
+egy 200 fős szobában 199 külön munkamenetet jelentene), hanem <strong>egy
+közös, csak-előre-forgatható (one-way) racsnit</strong> használ szobánként és
+küldő eszközönként — ezt a kezdeti kulcsot Olm-on keresztül,
+titkosítva osztja meg minden résztvevővel. Ennek következménye egy
+tudatos biztonsági kompromisszum: aki megszerzi egy adott ponton a
+racsni állapotát, <strong>onnantól előre</strong> tud minden üzenetet visszafejteni
+(amíg a kliens újra nem indítja a munkamenetet), viszont a korábbi
+üzeneteket nem — ez gyengébb garancia, mint az OMEMO/Signal
+üzenetenkénti kulcsváltása, cserébe nagy létszámú szobáknál
+számításigényben sokkal hatékonyabb. Erős a hídépítő (bridging)
+képessége más platformok (Discord, Telegram, IRC) felé. Cserébe jóval
+nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
+(<a href="https://github.com/element-hq/synapse">Synapse</a>) admin oldalról
+nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
+(pl. <a href="https://conduit.rs/">Conduit</a>) ezen próbálnak javítani.</p>
 <h3 id="signal">Signal<a class="headerlink" href="#signal" title="Permanent link">&para;</a></h3>
+<p><strong>Hivatalos oldal:</strong> <a href="https://signal.org/">signal.org</a> | <strong>Protokoll
+dokumentáció:</strong>
+<a href="https://signal.org/docs/">signal.org/docs</a></p>
 <p>A legelterjedtebb, iparági referenciának számító E2EE megoldás — innen
 ered a Signal Protocol/Double Ratchet is, amit az XMPP OMEMO és a Matrix
 Olm/Megolm is átvett. Nem alkalmas viszont a projekt céljaira, mert
-alapvetően centralizált: nincs hivatalos, interoperábilis módja annak,
-hogy valaki saját szerveren futtassa, kompatibilis módon a hivatalos
-Signal-hálózattal.</p>
+alapvetően centralizált: a Signal szervere zárt forráskódú, nincs
+hivatalos, interoperábilis módja annak, hogy valaki saját szerveren
+futtassa, kompatibilis módon a hivatalos Signal-hálózattal.</p>
 <h3 id="kisebb-kevesbe-elterjedt-alternativak">Kisebb, kevésbé elterjedt alternatívák<a class="headerlink" href="#kisebb-kevesbe-elterjedt-alternativak" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Session</strong> — Signal-fork, decentralizált, blokklánc-alapú
-  üzenettovábbítással</li>
-<li><strong>Briar, Tox</strong> — peer-to-peer megoldások, alacsony elterjedtség</li>
-<li><strong>Delta Chat</strong> — e-mail alapú, bárkinek van már e-mail címe, de a
-  szolgáltatók nem-szabványos implementációi miatt kompatibilitási
-  problémák adódhatnak</li>
+<li><strong><a href="https://getsession.org/">Session</a></strong> — Signal-fork, decentralizált,
+  Oxen blokklánc-alapú üzenettovábbítással (nincs központi szerver)</li>
+<li><strong><a href="https://briarproject.org/">Briar</a></strong>, <strong><a href="https://tox.chat/">Tox</a></strong> —
+  peer-to-peer megoldások, alacsony elterjedtség</li>
+<li><strong><a href="https://delta.chat/">Delta Chat</a></strong> — e-mail alapú (SMTP/IMAP fölé
+  épített E2EE réteg, Autocrypt szabvánnyal), bárkinek van már e-mail
+  címe, de a szolgáltatók nem-szabványos implementációi miatt
+  kompatibilitási problémák adódhatnak</li>
 </ul>
 <h2 id="konkret-alkalmazas-szint">Konkrét alkalmazás szint<a class="headerlink" href="#konkret-alkalmazas-szint" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Alkalmazás/szoftver</th>
+<th>Link</th>
 <th>Típus</th>
+<th>Titkosítás</th>
 <th>Miben hasonlít a projekthez</th>
-<th>Miben más</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Snikket</strong></td>
+<td><a href="https://snikket.org/">snikket.org</a></td>
 <td>Előre konfigurált, Docker-alapú XMPP szerver</td>
-<td>Pontosan erre a célra készült: család/baráti kör könnyen üzemeltetheti saját szerveren, minimális beállítással — ez a "referencia-termék"</td>
-<td>Kész, letölthető termék, nem saját fejlesztésű kódbázis</td>
+<td>OMEMO (alapból bekapcsolva)</td>
+<td>Pontosan erre a célra készült: család/baráti kör könnyen üzemeltetheti saját szerveren, minimális beállítással</td>
 </tr>
 <tr>
-<td><strong>Conversations (Android) / Dino (desktop)</strong></td>
-<td>XMPP kliens-alkalmazások</td>
-<td>Snikket vagy saját Prosody/ejabberd szerverrel párosítva funkcionálisan nagyon közel áll a tervezett rendszerhez, OMEMO titkosítással</td>
-<td>Kész kliensek, itt saját fejlesztés készül HTML/JS-ben</td>
+<td><strong>Conversations / Dino</strong></td>
+<td><a href="https://conversations.im/">conversations.im</a> / <a href="https://dino.im/">dino.im</a></td>
+<td>XMPP kliens (Android / desktop)</td>
+<td>OMEMO</td>
+<td>Snikket vagy saját Prosody/ejabberd szerverrel párosítva funkcionálisan nagyon közel áll a tervezett rendszerhez</td>
 </tr>
 <tr>
 <td><strong>Element</strong></td>
+<td><a href="https://element.io/">element.io</a></td>
 <td>Matrix kliens</td>
-<td>Letisztult, több platformos, self-hosted szerverrel (Synapse/Conduit/Dendrite) családi körben is használt</td>
-<td>A Matrix-háttér jóval nehezebb, erőforrás-igényesebb, mint az XMPP</td>
+<td>Olm/Megolm</td>
+<td>Letisztult, több platformos, self-hosted szerverrel (Synapse/Conduit) családi körben is használt</td>
 </tr>
 <tr>
 <td><strong>SimpleX Chat</strong></td>
+<td><a href="https://simplex.chat/">simplex.chat</a></td>
 <td>Fiók/telefonszám nélküli üzenetküldő</td>
+<td>Double Ratchet</td>
 <td>Minimalista, identitás nélküli filozófia — inspiráció a letisztult felhasználói élményhez</td>
-<td>Nem klasszikus self-hosted családi chat, más architektúra (privát meghívó-linkek)</td>
-</tr>
-<tr>
-<td><strong>Signal</strong></td>
-<td>Központosított E2EE üzenetküldő</td>
-<td>UX-referencia: letisztult, kizárólag üzenetküldésre fókuszáló felület</td>
-<td>Nem self-hostolható</td>
 </tr>
 <tr>
 <td><strong>Rocket.Chat / Zulip / Mattermost</strong></td>
+<td><a href="https://rocket.chat/">rocket.chat</a> / <a href="https://zulip.com/">zulip.com</a> / <a href="https://mattermost.com/">mattermost.com</a></td>
 <td>Csapat-kommunikációs platformok</td>
-<td>Szintén self-hosted, nyílt forráskódú</td>
-<td>Sokkal nagyobb léptékű, funkciógazdagabb (csatornák, integrációk) — jó ellenpélda arra, miben szeretnénk egyszerűbbek maradni</td>
+<td>opcionális/plugin-függő</td>
+<td>Szintén self-hosted, nyílt forráskódú, de jóval nagyobb léptékű — jó ellenpélda arra, miben szeretnénk egyszerűbbek maradni</td>
 </tr>
 </tbody>
 </table>
@@ -1016,6 +1105,8 @@ léptékű, saját szerver, gyors telepítés, XMPP-alapú, OMEMO titkosítássa
 (HTML/JS kliens) változata, ugyanazokkal az alapelvekkel (nyílt,
 decentralizált, strukturált üzenetküldés), a Rocket.Chat/Zulip/Mattermost-féle
 nehezebb platformoknál jóval egyszerűbb, minimálisabb célkitűzéssel.</p>
+<p>A tervezett rendszer komponenseinek felépítése az
+<a href="../../architecture/">Architektúra</a> oldalon található ábrán látható.</p>
 
 
 

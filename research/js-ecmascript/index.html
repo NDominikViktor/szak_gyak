@@ -202,6 +202,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architektúra
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../worklog/" class="md-tabs__link">
         
   
@@ -324,6 +343,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architektúra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../worklog/" class="md-nav__link">
         
   
@@ -367,10 +413,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -388,8 +434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -543,6 +589,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#typescript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TypeScript
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -661,10 +718,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -682,8 +739,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -776,6 +833,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#typescript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TypeScript
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -819,6 +887,24 @@ repó</a>.</p>
 <li><strong>Modulok (<code>import</code>/<code>export</code>)</strong> — a tiszta, moduláris kódstruktúra
   kialakításához, ami a projekt egyik célkitűzése volt</li>
 </ul>
+<h2 id="typescript">TypeScript<a class="headerlink" href="#typescript" title="Permanent link">&para;</a></h2>
+<p>A TypeScript a JavaScript egy szuperhalmaza, amely statikus típusrendszert
+ad hozzá, és fordítás (vagy futásidejű transzpilálás) során tiszta
+JavaScript-té alakul. Nem külön nyelv a JS-hez képest, hanem annak
+kiterjesztése — minden érvényes JavaScript kód egyben érvényes TypeScript
+kód is.</p>
+<p><strong>Miért releváns a projekthez:</strong> a <a href="../node-deno-bun/">korábban vizsgált futtatókörnyezetek
+közül</a> a Deno és a Bun natívan (külön build-lépés
+nélkül) futtat TypeScript fájlokat, a Node.js-hez pedig <code>tsc</code> vagy
+<code>ts-node</code>/<code>tsx</code> szükséges. Egy TypeScript alapú átálláshoz a fő előny a
+korai hibafelismerés lenne (pl. az üzenetstruktúrák, a WebSocket
+üzenettípusok vagy a titkosítási függvények paramétereinek
+típusellenőrzése fordítási időben, nem futásidőben) — ez különösen
+hasznos lehet egy olyan projektnél, ahol a kliens és szerver között
+struktúrált üzenetek (JSON payloadok) közlekednek.</p>
+<p>A jelenlegi fázisban a projekt sima JavaScript-ben készül, de a
+TypeScript-re való átállás egy ésszerű jövőbeli lépés lehet, különösen
+ha a kódbázis mérete nő.</p>
 
 
 

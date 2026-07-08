@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dokumentacio-generatorok-osszehasonlitasa" class="md-skip">
+        <a href="#dokumentacio-generatorok-technikai-osszehasonlitas" class="md-skip">
           Kihagyás
         </a>
       
@@ -190,6 +190,25 @@
     
   
   Kezdőlap
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architektúra
 
       </a>
     </li>
@@ -324,6 +343,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architektúra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../worklog/" class="md-nav__link">
         
   
@@ -367,10 +413,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -388,8 +434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -494,10 +540,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#valasztas-indoklasa" class="md-nav__link">
+  <a href="#a-valasztas-indoklasa" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Választás indoklása
+        A választás indoklása
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-hugo-kimaradasanak-oka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A Hugo kimaradásának oka
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vegso-dontes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Végső döntés
       
     </span>
   </a>
@@ -650,10 +718,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -671,8 +739,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -744,10 +812,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#valasztas-indoklasa" class="md-nav__link">
+  <a href="#a-valasztas-indoklasa" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Választás indoklása
+        A választás indoklása
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-hugo-kimaradasanak-oka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A Hugo kimaradásának oka
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vegso-dontes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Végső döntés
       
     </span>
   </a>
@@ -771,65 +861,94 @@
 
 
 
-<h1 id="dokumentacio-generatorok-osszehasonlitasa">Dokumentáció-generátorok összehasonlítása<a class="headerlink" href="#dokumentacio-generatorok-osszehasonlitasa" title="Permanent link">&para;</a></h1>
-<p>A <a href="https://jamstack.org/generators/">jamstack.org/generators</a> lista alapján
-a legelterjedtebb, kifejezetten dokumentációra használt static site
-generatorok:</p>
+<h1 id="dokumentacio-generatorok-technikai-osszehasonlitas">Dokumentáció-generátorok — technikai összehasonlítás<a class="headerlink" href="#dokumentacio-generatorok-technikai-osszehasonlitas" title="Permanent link">&para;</a></h1>
+<p>A cél annak eldöntése volt, melyik eszköz alkalmas legjobban technikai
+dokumentációra, amelyben matematikai jelölésrendszer (képletek) és
+verziókövetés-barát forrás egyaránt fontos szempont.</p>
 <table>
 <thead>
 <tr>
-<th>Eszköz</th>
-<th>Nyelv/motor</th>
-<th>Tanulási görbe</th>
-<th>Erősség</th>
-<th>Gyengeség</th>
+<th>Szempont</th>
+<th>MkDocs (Material)</th>
+<th>Docusaurus</th>
+<th>VuePress</th>
+<th>Hugo</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>MkDocs (+ Material)</strong></td>
-<td>Python</td>
-<td>nagyon alacsony</td>
-<td>egyetlen YAML config, gyors beüzemelés, kiváló beépített keresés a Material témával</td>
-<td>kevésbé rugalmas, ha komplex interaktív komponens kéne</td>
+<td><strong>Renderelési modell</strong></td>
+<td>statikus (Python/Jinja2)</td>
+<td>reaktív (React/SPA)</td>
+<td>reaktív (Vue/SPA)</td>
+<td>statikus (Go)</td>
 </tr>
 <tr>
-<td><strong>Docusaurus</strong></td>
-<td>React/Node.js</td>
-<td>közepes–magas</td>
-<td>verziózás, i18n, MDX (React komponens Markdownban), erős közösség (Meta mögötte)</td>
-<td>Node+React toolchain nehezebb, "túl sok" egy kis projektnek</td>
+<td><strong>Függőségi lánc</strong></td>
+<td>Python (pip), izolált a Node-alapú projekttől</td>
+<td>Node.js (npm), komplex build-lánc</td>
+<td>Node.js (npm), Vue-ökoszisztéma</td>
+<td>Go (egyetlen bináris)</td>
 </tr>
 <tr>
-<td><strong>VuePress</strong></td>
-<td>Vue/Node.js</td>
+<td><strong>Képletmegjelenítés</strong></td>
+<td>natív (KaTeX/MathJax integráció)</td>
+<td>plugin-függő (Remark-alapú)</td>
+<td>plugin-függő</td>
+<td>natív (Goldmark)</td>
+</tr>
+<tr>
+<td><strong>Verziókövetés-barátság</strong></td>
+<td>git-natív, tiszta Markdown fájlok</td>
+<td>komplex (i18n, verziózási metaadatok)</td>
 <td>közepes</td>
-<td>Vue-alapú, jó ha valaki már ismeri a Vue-t, hasonló élmény mint a Docusaurus, csak Vue-val</td>
-<td>kisebb közösség, mint a Docusaurus-nak, ami hatással lehet a témák és bővítmények elérhetőségére</td>
+<td>fájl-alapú, tiszta</td>
 </tr>
 <tr>
-<td><strong>Hugo</strong></td>
-<td>Go</td>
-<td>magas</td>
-<td>extrém gyors build, nagy (több ezer oldalas) dokumentációnál ideális, ahol a build idő szűk keresztmetszetté válhat</td>
-<td>a Go template szintaxis nehézkes kezdőknek</td>
+<td><strong>Build pipeline</strong></td>
+<td>egyszerű, determinisztikus</td>
+<td>Webpack/Vite-alapú, nehezebb</td>
+<td>Vite-alapú</td>
+<td>rendkívül gyors, egyszerű bináris</td>
 </tr>
 </tbody>
 </table>
-<h2 id="valasztas-indoklasa">Választás indoklása<a class="headerlink" href="#valasztas-indoklasa" title="Permanent link">&para;</a></h2>
-<p>A projekthez az <strong>MkDocs + Material</strong> kombináció mellett döntöttünk:</p>
-<ul>
-<li>egyszemélyes, kis léptékű dokumentációról van szó, nem kell a Docusaurus
-  vagy Hugo által kínált skálázhatóság</li>
-<li>Python-alapú, egyetlen YAML konfigurációs fájllal működik — nem igényel
-  külön Node.js build-láncot a dokumentációhoz, miközben a projekt maga
-  Node.js-ben készül</li>
-<li>a Material téma önmagában hozza a beépített keresést és a
-  MathJax/KaTeX-alapú képlet-megjelenítést, ami a benchmark-eredmények
-  bemutatásához hasznos</li>
-<li>a betanulási görbe a legalacsonyabb a felsoroltak közül, ami egy nyári
-  gyakorlat időkeretében fontos szempont</li>
-</ul>
+<h2 id="a-valasztas-indoklasa">A választás indoklása<a class="headerlink" href="#a-valasztas-indoklasa" title="Permanent link">&para;</a></h2>
+<p><strong>1) Build-lánc izoláció.</strong> A projekt fejlesztői környezete Node.js-alapú
+(a chat-alkalmazás szervere és kliense is JavaScript-ben készül). Egy
+Python-alapú dokumentáció-generátor (MkDocs, <code>pip</code>-en keresztül)
+teljesen elválasztja a dokumentáció build-folyamatát a projekt saját
+függőségi fájától — ez elkerüli a lehetséges <code>node_modules</code>-konfliktusokat,
+és determinisztikus, egyszerű build-folyamatot biztosít.</p>
+<p><strong>2) SSR/hidratáció overhead.</strong> A Docusaurus és a VuePress is
+Single Page Application (SPA) architektúrát használ (React, illetve
+Vue), ami "hidratációt" (kliensoldali runtime-inicializálást) igényel
+minden oldalbetöltésnél. Az MkDocs ezzel szemben build-időben tiszta,
+statikus HTML-t generál, ami jobb betöltési teljesítményt és jobb
+keresőmotor-indexelhetőséget garantál, futásidejű JavaScript-függőség
+nélkül.</p>
+<p><strong>3) Matematikai pontosság.</strong> A benchmark-eredmények (eloszlás, szórás,
+percentilis) megbízható LaTeX-alapú képlet-megjelenítést igényelnek. Az
+MkDocs Material natív KaTeX/MathJax-integrációt ad, ami megbízhatóan
+működik — a Docusaurus/VuePress Remark-plugin-alapú megoldásainál
+tapasztalt runtime JavaScript verziókonfliktusok nélkül.</p>
+<p><strong>4) Verziókövetési hatékonyság.</strong> Mivel a projekt trunk-based
+fejlesztési modellt követ, a merge-konfliktusok feloldhatósága fontos
+szempont. Az MkDocs a dokumentációt szigorúan Markdown fájlokban tárolja,
+minimális metaadat-zajjal — ez tisztább, kezelhetőbb git diff-eket
+eredményez, mint a sablon-nehéz vagy SPA-metaadat-gazdag alternatívák.</p>
+<h2 id="a-hugo-kimaradasanak-oka">A Hugo kimaradásának oka<a class="headerlink" href="#a-hugo-kimaradasanak-oka" title="Permanent link">&para;</a></h2>
+<p>A Hugo build-sebessége kiemelkedő, és több ezer oldalas
+dokumentációknál ez döntő szempont lehet. Ennél a projektnél viszont a
+dokumentáció mérete (néhány tucat oldal) miatt ez az előny nem
+számottevő, ugyanakkor a Go template-szintaxis tanulása és a kevésbé
+kiforrott matematikai jelölés-támogatás felesleges többletmunkát
+jelentene egy ilyen léptékű projektnél.</p>
+<h2 id="vegso-dontes">Végső döntés<a class="headerlink" href="#vegso-dontes" title="Permanent link">&para;</a></h2>
+<p><strong>MkDocs + Material</strong> — a build-lánc izolációja, a natív statikus HTML-
+kimenet, a beépített matematikai jelölés-támogatás és a git-barát
+Markdown-forrás együttesen ezt teszik a legmegfelelőbb választássá ehhez
+a projekthez.</p>
 
 
 

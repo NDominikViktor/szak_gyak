@@ -202,6 +202,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architektúra
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../worklog/" class="md-tabs__link">
         
   
@@ -324,6 +343,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architektúra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../worklog/" class="md-nav__link">
         
   
@@ -367,10 +413,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -388,8 +434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -661,6 +707,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#algoritmus-osszehasonlitas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Algoritmus-összehasonlítás
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kulcskezeles-hogyan-kotodik-a-titkos-kulcs-a-felhasznalohoz" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kulcskezelés — hogyan kötődik a titkos kulcs a felhasználóhoz?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ajanlas-a-projekthez" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -705,10 +773,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -726,8 +794,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -854,6 +922,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#algoritmus-osszehasonlitas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Algoritmus-összehasonlítás
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kulcskezeles-hogyan-kotodik-a-titkos-kulcs-a-felhasznalohoz" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kulcskezelés — hogyan kötődik a titkos kulcs a felhasználóhoz?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ajanlas-a-projekthez" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -883,52 +973,159 @@
 
 <h1 id="titkositasi-algoritmusok-es-konyvtarak">Titkosítási algoritmusok és könyvtárak<a class="headerlink" href="#titkositasi-algoritmusok-es-konyvtarak" title="Permanent link">&para;</a></h1>
 <h2 id="alapfogalom-signal-protocol-double-ratchet">Alapfogalom: Signal Protocol / Double Ratchet<a class="headerlink" href="#alapfogalom-signal-protocol-double-ratchet" title="Permanent link">&para;</a></h2>
+<p><strong>Dokumentáció:</strong> <a href="https://signal.org/docs/">signal.org/docs</a></p>
 <p>Az iparágban de facto szabvánnyá vált E2EE-tervezési minta — nem konkrét
 könyvtár, hanem egy algoritmus-család, amit a Signal, korábban a
 WhatsApp, a Matrix (Olm/Megolm néven), valamint az XMPP (OMEMO
 kiterjesztésen keresztül) is átvett.</p>
-<p>A lényege a "ratchet" (racsni) mechanizmus: minden üzenetváltás után új
-kulcsok generálódnak, így ha egy támadó megszerzi az aktuális kulcsot,
-azzal sem a korábbi, sem a jövőbeli üzeneteket nem tudja visszafejteni —
-ezt hívják <strong>forward secrecy</strong>-nek. Ezt érdemes mintaként követni a saját
-E2EE modulban is.</p>
+<p><strong>Hogyan működik röviden:</strong> a felek egy kezdeti X3DH (Extended
+Triple Diffie-Hellman) kulcscserével hoznak létre egy közös titkot, majd
+minden egyes üzenetváltás után egy új Diffie-Hellman kulcspárt
+generálnak, és ezzel "elforgatják" (ratchet) a titkosító kulcsot. Így ha
+egy támadó megszerzi az aktuális kulcsot, azzal sem a korábbi, sem a
+jövőbeli üzeneteket nem tudja visszafejteni — ezt hívják <strong>forward
+secrecy</strong>-nek, illetve <strong>post-compromise security</strong>-nek (a jövőbeli
+üzenetek védelme egy múltbeli kompromittálódás után is helyreáll).</p>
 <h2 id="webcrypto-api">WebCrypto API<a class="headerlink" href="#webcrypto-api" title="Permanent link">&para;</a></h2>
-<p>Böngészőbe (és Node.js-be is) beépített, natív titkosítási API, nem kell
-hozzá külön csomagot telepíteni. Előnye, hogy natívan gyors és biztonságos,
-mert a futtatókörnyezet implementálja alacsony szinten. Hátránya, hogy
-elég alacsony szintű és kényelmetlen API — mindenhol Promise-alapú, még
-egyszerű műveleteknél is. Elsősorban akkor optimális, ha a beépített
-algoritmusok (AES-GCM, ECDH, RSA) pontosan lefedik az igényeket.</p>
+<p><strong>Dokumentáció:</strong> <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API">MDN - Web Crypto
+API</a></p>
+<p>Böngészőbe (és Node.js-be is, a <code>crypto.webcrypto</code> objektumon keresztül)
+beépített, natív titkosítási API, nem kell hozzá külön csomagot
+telepíteni. Támogatott algoritmusok közül a projekthez relevánsak: az
+<strong>AES-GCM</strong> (szimmetrikus, autentikált titkosítás — ezt használjuk a
+<a href="../../benchmarks/perf-hooks-example/">benchmark szkriptben</a> is) és az
+<strong>ECDH</strong> (elliptikus görbés Diffie-Hellman kulcscsere, pl. P-256 görbével).
+Előnye, hogy natívan gyors és biztonságos, mert a futtatókörnyezet
+implementálja alacsony szinten. Hátránya, hogy elég alacsony szintű API
+— mindenhol Promise-alapú, még egyszerű műveleteknél is —, és nem
+támogat minden modern algoritmust (pl. az X25519 görbét csak újabb
+böngészőverziók óta).</p>
 <h2 id="libsodium-libsodiumjs">libsodium (libsodium.js)<a class="headerlink" href="#libsodium-libsodiumjs" title="Permanent link">&para;</a></h2>
+<p><strong>Repó:</strong> <a href="https://github.com/jedisct1/libsodium.js">github.com/jedisct1/libsodium.js</a></p>
 <p>Szélesebb körben auditált, több nyelvben elérhető (C, WebAssembly-vel
 JS-re fordítva) kriptográfiai könyvtár, magasabb szintű, kényelmesebb
 API-val, mint a nyers WebCrypto. A Double Ratchet-hez szükséges
-primitíveket (X25519 kulcscsere, ChaCha20-Poly1305) is kényelmesen
-kezeli. A teljes csomag kb. 188 KB (minifikálva, gzip-elve), ami böngészős
-kliens esetén már számottevő méret.</p>
+primitíveket kényelmesen kezeli: <strong>X25519</strong> (Curve25519-alapú
+kulcscsere, gyorsabb és egyszerűbb, mint a WebCrypto P-256-ja) és
+<strong>ChaCha20-Poly1305</strong> (AES-GCM alternatívája — szoftveres
+implementációban gyakran gyorsabb, mert nem igényel hardveres AES
+gyorsítást, ami relevánssá teszi kisebb/beágyazott eszközöknél). A teljes
+csomag kb. 188 KB (minifikálva, gzip-elve), ami böngészős kliens esetén
+már számottevő méret.</p>
 <h2 id="noble-cryptography">Noble cryptography<a class="headerlink" href="#noble-cryptography" title="Permanent link">&para;</a></h2>
-<p>Tisztán JavaScript-ben írt könyvtár-család (külön csomagok: ciphers,
-hashes, curves, post-kvantum algoritmusok), moduláris felépítéssel — egy
+<p><strong>Repó:</strong> <a href="https://github.com/paulmillr/noble-ciphers">github.com/paulmillr/noble-ciphers</a>
+(és testvér-csomagjai: <code>noble-hashes</code>, <code>noble-curves</code>)</p>
+<p>Tisztán JavaScript-ben írt könyvtár-család, moduláris felépítéssel — egy
 jó bundler csak azt a kódot húzza be, amire ténylegesen szükség van
-(tree-shaking). Ajánlott választás, amikor a WebCrypto nem fedi le az
-igényt (pl. Curve25519/X25519 művelet, amit a WebCrypto natívan nem
-támogat minden környezetben).</p>
+(tree-shaking), szemben a libsodium egyben-jövő WASM-bináris méretével.
+Ajánlott választás, amikor a WebCrypto nem fedi le az igényt (pl.
+Curve25519/X25519 művelet régebbi böngészőkben).</p>
 <h2 id="nodejs-beepitett-nodecrypto-modul">Node.js beépített <code>node:crypto</code> modul<a class="headerlink" href="#nodejs-beepitett-nodecrypto-modul" title="Permanent link">&para;</a></h2>
-<p>Node 20+ óta jelentősen kényelmesebbé vált. Van rá 2026-os példa, hogy
-valaki teljesen külső függőség nélkül épített E2EE-t vele (Ed25519 hosszú
-távú identitáshoz, X25519 ideiglenes session-kulcsokhoz) — bár ilyenkor
-magának kell megoldani olyan dolgokat, mint a valódi forward secrecy
-(kulcs-racsnizás) és a kulcscsere hitelesítése, amit egy kész könyvtár már
-megad.</p>
+<p><strong>Dokumentáció:</strong> <a href="https://nodejs.org/api/crypto.html">nodejs.org/api/crypto.html</a></p>
+<p>Node 20+ óta jelentősen kényelmesebbé vált, és tartalmazza a
+<code>crypto.webcrypto</code> objektumot is (ugyanaz az API, mint böngészőben). Van
+rá 2026-os példa, hogy valaki teljesen külső függőség nélkül épített
+E2EE-t vele (<strong>Ed25519</strong> hosszú távú identitáshoz — ez az EdDSA aláíró
+algoritmus Curve25519 fölött, <strong>X25519</strong> ideiglenes session-kulcsokhoz) —
+bár ilyenkor magának kell megoldania olyan dolgokat, mint a valódi
+forward secrecy (kulcs-racsnizás) és a kulcscsere hitelesítése, amit egy
+kész könyvtár már megad.</p>
+<h2 id="algoritmus-osszehasonlitas">Algoritmus-összehasonlítás<a class="headerlink" href="#algoritmus-osszehasonlitas" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Algoritmus</th>
+<th>Típus</th>
+<th>Hol használjuk</th>
+<th>Megjegyzés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AES-GCM</strong></td>
+<td>szimmetrikus, autentikált titkosítás</td>
+<td>üzenettartalom titkosítása</td>
+<td>hardveres gyorsítással (AES-NI) nagyon gyors modern CPU-kon; ezt méri a <a href="../../benchmarks/perf-hooks-example/">benchmark</a></td>
+</tr>
+<tr>
+<td><strong>ChaCha20-Poly1305</strong></td>
+<td>szimmetrikus, autentikált titkosítás</td>
+<td>AES-GCM alternatívája</td>
+<td>szoftveresen gyakran gyorsabb, ha nincs hardveres AES-gyorsítás</td>
+</tr>
+<tr>
+<td><strong>ECDH (P-256)</strong></td>
+<td>aszimmetrikus kulcscsere</td>
+<td>kezdeti közös titok létrehozása</td>
+<td>WebCrypto natívan támogatja</td>
+</tr>
+<tr>
+<td><strong>X25519 (Curve25519)</strong></td>
+<td>aszimmetrikus kulcscsere</td>
+<td>Double Ratchet kulcscsere lépései</td>
+<td>gyorsabb és egyszerűbb, mint a P-256, de a WebCrypto csak újabban támogatja natívan</td>
+</tr>
+<tr>
+<td><strong>Ed25519</strong></td>
+<td>digitális aláírás</td>
+<td>identitás-hitelesítés (kulcscsere aláírása)</td>
+<td>EdDSA séma Curve25519 fölött</td>
+</tr>
+</tbody>
+</table>
+<h2 id="kulcskezeles-hogyan-kotodik-a-titkos-kulcs-a-felhasznalohoz">Kulcskezelés — hogyan kötődik a titkos kulcs a felhasználóhoz?<a class="headerlink" href="#kulcskezeles-hogyan-kotodik-a-titkos-kulcs-a-felhasznalohoz" title="Permanent link">&para;</a></h2>
+<p>Mivel a kliens egy böngészőben futó alkalmazás, a hosszú távú titkos
+kulcs alapesetben <strong>az adott böngésző adott profiljához</strong> kötődik: a
+WebCrypto API a nem-exportálható (<code>extractable: false</code>) kulcsokat úgy
+tárolja, hogy azok gyakorlatilag nem hagyhatják el azt a böngésző-
+profilt, amelyben létrejöttek (IndexedDB-ben, a böngésző saját belső
+tárolójában). Ez azt jelenti, hogy egy másik eszközön vagy böngészőben
+megnyitva az alkalmazást, alapból <strong>nincs hozzáférés a régi
+üzenetekhez</strong> — ami biztonsági szempontból jó (egy ellopott/elveszett
+eszköz nem fér hozzá más eszközök kulcsaihoz), de használhatósági
+szempontból korlátozó.</p>
+<p><strong>Lehetséges megoldások a több eszközön való használatra</strong> (ezek a
+projektben még nincsenek eldöntve, ez egy tervezési kérdés, amit a
+fejlesztés során kell megválaszolni):</p>
+<ol>
+<li><strong>Exportálható kulcs + jelszóval védett biztonsági mentés</strong> — a
+   WebCrypto <code>exportKey()</code> függvényével a kulcs kiexportálható, majd egy
+   felhasználó által megadott jelszóból származtatott kulccsal
+   (<code>PBKDF2</code> vagy <code>Argon2</code>) titkosítva elmenthető (pl. egy fájlba vagy a
+   szerverre, titkosított formában). Ez hasonló elven működik, mint a
+   Signal "biztonsági mentés visszaállítási kulcsa" mechanizmusa.</li>
+<li><strong>QR-kódos eszköz-párosítás</strong> — egy már bejelentkezett eszköz
+   megjelenít egy QR-kódot, amit az új eszköz beolvas, és ezen a
+   csatornán (helyi hálózaton vagy a szerveren keresztül, de titkosítva)
+   történik a kulcs átvitele. Ez a WhatsApp Web / Signal "linked
+   devices" funkciójának elve.</li>
+<li><strong>Több kulcspár eszközönként</strong> — ahelyett, hogy ugyanazt a kulcsot
+   vinnénk át, minden eszköz saját kulcspárt generál, és a régebbi
+   eszköz(ök) "aláírják" (hitelesítik) az új eszköz nyilvános kulcsát —
+   ez a Signal és a Matrix által is használt "device verification"
+   megközelítés, ahol nem a titkos kulcs vándorol, hanem a bizalmi lánc
+   épül tovább.</li>
+</ol>
+<p>A projekt jelenlegi fázisában az <strong>1. és 3. megoldás kombinációja</strong>
+tűnik a legreálisabbnak: kezdetben egyetlen eszköz/böngésző támogatása
+az elsődleges cél, a több-eszközös support egy jövőbeli kiterjesztés
+lenne.</p>
 <h2 id="ajanlas-a-projekthez">Ajánlás a projekthez<a class="headerlink" href="#ajanlas-a-projekthez" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Kliens oldal (böngésző):</strong> WebCrypto API az alap műveletekhez
   (AES-GCM üzenettitkosítás, ECDH kulcscsere)</li>
-<li><strong>Racsnizott kulcskezelés (Double Ratchet-szerű megoldás):</strong> érdemes egy
-  kész, auditált implementációt (pl. libsodium X25519 primitívjei)
-  mintaként használni, és a saját racsni-logikát erre építeni — saját
-  tervezésű kriptográfiai algoritmust nem javasolt kitalálni, mert az
-  könnyen hibázható</li>
+<li><strong>Racsnizott kulcskezelés (Double Ratchet-szerű megoldás):</strong> érdemes
+  egy kész, auditált implementációt (pl. libsodium X25519 primitívjei)
+  mintaként használni, és a saját racsni-logikát erre építeni. Egy magyar
+  nyelvű, közérthető leírás a mechanizmusról: <a href="https://geekhost.hu/titok-a-zsebben-hogyan-lett-a-signal-protokoll-a-gigacsevegok-lathatatlan-testore/">Titok a zsebben — hogyan
+  lett a Signal-protokoll a gigacsevegők láthatatlan
+  testőre</a>
+  (a cikk a mechanizmust úgy írja le, hogy a Double Ratchet folyamatosan
+  "csörlőzi", azaz előre forgatja a kulcsokat). Saját tervezésű
+  kriptográfiai algoritmus kitalálása helyett egy meglévő, auditált
+  megoldásra érdemes építeni, mert az apró tervezési hibák
+  kriptográfiában különösen nehezen vehetők észre, és súlyos biztonsági
+  következményekkel járhatnak.</li>
 <li><strong>Szerver oldal:</strong> végponti titkosításnál a szerver csak "vakon"
   továbbítja az adatot, így ott nincs szükség komoly kriptográfiai kódra,
   legfeljebb a metaadatok (feladó/címzett, időbélyeg) kezelésére</li>
