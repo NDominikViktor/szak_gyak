@@ -17,6 +17,7 @@ theme:
 
 nav:
   - Kezdőlap: index.md
+  - Architektúra: architecture.md
   - Munkanapló: worklog.md
   - Kutatás / előkészítés:
       - Git workflow: research/git-workflow.md
