@@ -84,15 +84,62 @@ kész könyvtár már megad.
 | **X25519 (Curve25519)** | aszimmetrikus kulcscsere | Double Ratchet kulcscsere lépései | gyorsabb és egyszerűbb, mint a P-256, de a WebCrypto csak újabban támogatja natívan |
 | **Ed25519** | digitális aláírás | identitás-hitelesítés (kulcscsere aláírása) | EdDSA séma Curve25519 fölött |
 
+## Kulcskezelés — hogyan kötődik a titkos kulcs a felhasználóhoz?
+
+Mivel a kliens egy böngészőben futó alkalmazás, a hosszú távú titkos
+kulcs alapesetben **az adott böngésző adott profiljához** kötődik: a
+WebCrypto API a nem-exportálható (`extractable: false`) kulcsokat úgy
+tárolja, hogy azok gyakorlatilag nem hagyhatják el azt a böngésző-
+profilt, amelyben létrejöttek (IndexedDB-ben, a böngésző saját belső
+tárolójában). Ez azt jelenti, hogy egy másik eszközön vagy böngészőben
+megnyitva az alkalmazást, alapból **nincs hozzáférés a régi
+üzenetekhez** — ami biztonsági szempontból jó (egy ellopott/elveszett
+eszköz nem fér hozzá más eszközök kulcsaihoz), de használhatósági
+szempontból korlátozó.
+
+**Lehetséges megoldások a több eszközön való használatra** (ezek a
+projektben még nincsenek eldöntve, ez egy tervezési kérdés, amit a
+fejlesztés során kell megválaszolni):
+
+1. **Exportálható kulcs + jelszóval védett biztonsági mentés** — a
+   WebCrypto `exportKey()` függvényével a kulcs kiexportálható, majd egy
+   felhasználó által megadott jelszóból származtatott kulccsal
+   (`PBKDF2` vagy `Argon2`) titkosítva elmenthető (pl. egy fájlba vagy a
+   szerverre, titkosított formában). Ez hasonló elven működik, mint a
+   Signal "biztonsági mentés visszaállítási kulcsa" mechanizmusa.
+2. **QR-kódos eszköz-párosítás** — egy már bejelentkezett eszköz
+   megjelenít egy QR-kódot, amit az új eszköz beolvas, és ezen a
+   csatornán (helyi hálózaton vagy a szerveren keresztül, de titkosítva)
+   történik a kulcs átvitele. Ez a WhatsApp Web / Signal "linked
+   devices" funkciójának elve.
+3. **Több kulcspár eszközönként** — ahelyett, hogy ugyanazt a kulcsot
+   vinnénk át, minden eszköz saját kulcspárt generál, és a régebbi
+   eszköz(ök) "aláírják" (hitelesítik) az új eszköz nyilvános kulcsát —
+   ez a Signal és a Matrix által is használt "device verification"
+   megközelítés, ahol nem a titkos kulcs vándorol, hanem a bizalmi lánc
+   épül tovább.
+
+A projekt jelenlegi fázisában az **1. és 3. megoldás kombinációja**
+tűnik a legreálisabbnak: kezdetben egyetlen eszköz/böngésző támogatása
+az elsődleges cél, a több-eszközös support egy jövőbeli kiterjesztés
+lenne.
+
 ## Ajánlás a projekthez
 
 - **Kliens oldal (böngésző):** WebCrypto API az alap műveletekhez
   (AES-GCM üzenettitkosítás, ECDH kulcscsere)
-- **Racsnizott kulcskezelés (Double Ratchet-szerű megoldás):** érdemes egy
-  kész, auditált implementációt (pl. libsodium X25519 primitívjei)
-  mintaként használni, és a saját racsni-logikát erre építeni — saját
-  tervezésű kriptográfiai algoritmust nem javasolt kitalálni, mert az
-  könnyen hibázható
+- **Racsnizott kulcskezelés (Double Ratchet-szerű megoldás):** érdemes
+  egy kész, auditált implementációt (pl. libsodium X25519 primitívjei)
+  mintaként használni, és a saját racsni-logikát erre építeni. Egy magyar
+  nyelvű, közérthető leírás a mechanizmusról: [Titok a zsebben — hogyan
+  lett a Signal-protokoll a gigacsevegők láthatatlan
+  testőre](https://geekhost.hu/titok-a-zsebben-hogyan-lett-a-signal-protokoll-a-gigacsevegok-lathatatlan-testore/)
+  (a cikk a mechanizmust úgy írja le, hogy a Double Ratchet folyamatosan
+  "csörlőzi", azaz előre forgatja a kulcsokat). Saját tervezésű
+  kriptográfiai algoritmus kitalálása helyett egy meglévő, auditált
+  megoldásra érdemes építeni, mert az apró tervezési hibák
+  kriptográfiában különösen nehezen vehetők észre, és súlyos biztonsági
+  következményekkel járhatnak.
 - **Szerver oldal:** végponti titkosításnál a szerver csak "vakon"
   továbbítja az adatot, így ott nincs szükség komoly kriptográfiai kódra,
   legfeljebb a metaadatok (feladó/címzett, időbélyeg) kezelésére
