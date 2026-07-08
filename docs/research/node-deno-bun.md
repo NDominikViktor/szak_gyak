@@ -181,6 +181,34 @@ A különbség erősen statisztikailag szignifikáns.
     6 172,0 → 13 670,0 req/mp (**+121,5%**). Natívan mérve:
     **Deno (15 887,6) ≈ Node.js (15 614,8) > Bun (13 670,0)**.
 
+## Kiegészítő mérés: kettes-hatvány alapú méretek
+
+A fenti mérés decimális (SI, ×1000) méreteket használt. Ennek
+finomításaként egy második mérési sorozatot is elvégeztünk pontos
+kettő-hatvány méretekkel (128 B, 1 KiB, 8 KiB, 64 KiB, 1 MiB, 8 MiB,
+64 MiB), ugyanazzal a szkripttel és módszertannal
+(`encrypt-benchmark-v3-pow2.mjs`), ugyanazon a gépen:
+
+| Méret | Node.js trimmelt avg (ms) | Deno trimmelt avg (ms) | Bun trimmelt avg (ms) |
+|---|---:|---:|---:|
+| 128 B | 0,170 | 0,086 | 0,087 |
+| 1 KiB | 0,170 | 0,099 | 0,089 |
+| 8 KiB | 0,169 | 0,164 | 0,064 |
+| 64 KiB | 0,279 | 0,444 | 0,180 |
+| 1 MiB | 1,569 | 5,753 | 1,759 |
+| 8 MiB | 12,980 | 38,705 | 11,130 |
+| 64 MiB | 93,319 | 292,654 | 65,696 |
+
+**Következtetés:** a kettes-hatvány alapú mérés ugyanazt a mintázatot
+erősíti meg, mint a decimális: kis-közepes méreteknél a három runtime
+összemérhető (a Bun jellemzően valamivel gyorsabb), nagy méreteknél
+(1 MiB+) a **Deno következetesen lemarad** (kb. 3,7-4,5×-ös
+különbséggel a Node.js-hez/Bun-hoz képest), a **Node.js és a Bun**
+pedig közel áll egymáshoz — 64 MiB-nál itt kifejezetten a Bun a
+leggyorsabb (65,7 ms), a Node.js középen (93,3 ms), a Deno pedig jóval
+lassabb (292,7 ms). A két mérési módszertan (decimális és bináris)
+tehát egymást megerősítő, konzisztens képet ad.
+
 ## Valós üzenetméretek kontextusa
 
 Népszerű üzenetküldő alkalmazásoknál egy tipikus szöveges üzenet —
