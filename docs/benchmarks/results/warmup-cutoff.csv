@@ -1,0 +1,23 @@
+# Forrás: docs/research/node-deno-bun.md warm-up kiszűrési táblázata (2. ábra).
+runtime,size_bytes,total_n,dropped_n
+node,100,300,180
+node,1000,300,220
+node,10000,300,80
+node,100000,300,80
+node,1000000,200,20
+node,10000000,50,0
+node,100000000,15,0
+deno,100,300,30
+deno,1000,300,180
+deno,10000,300,180
+deno,100000,300,60
+deno,1000000,200,60
+deno,10000000,50,0
+deno,100000000,15,0
+bun,100,300,120
+bun,1000,300,30
+bun,10000,300,60
+bun,100000,300,30
+bun,1000000,200,120
+bun,10000000,50,0
+bun,100000000,15,0
