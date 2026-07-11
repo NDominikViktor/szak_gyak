@@ -47,6 +47,13 @@ teljesen szabványos maradhat úgy is, hogy sosem támogatja az OMEMO-t.
 Népszerű szerver-implementációk: [Prosody](https://prosody.im/),
 [ejabberd](https://www.ejabberd.im/).
 
+Az alábbi ábra a fent leírt lépéseket foglalja össze folyamat szinten:
+
+![OMEMO üzenetküldési folyamat](omemo-flow-diagram.png)
+
+**1. ábra:** OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
+publikálásától az első titkosított üzenetig.
+
 ### Matrix
 
 **Hivatalos oldal:** [matrix.org](https://matrix.org/) | **Specifikáció:**
@@ -75,6 +82,16 @@ nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 ([Synapse](https://github.com/element-hq/synapse)) admin oldalról
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. [Conduit](https://conduit.rs/)) ezen próbálnak javítani.
+
+Az alábbi ábra a Megolm session-kulcs terjesztésének és a csoportos
+titkosításnak a folyamatát mutatja:
+
+![Matrix Olm/Megolm üzenetküldési folyamat](matrix-flow-diagram.png)
+
+**2. ábra:** Matrix (Olm/Megolm) — csoportos üzenetküldés folyamata.
+Jól látszik a különbség az OMEMO-hoz (1. ábra) képest: ott minden
+üzenethez páronkénti ratchet-lépés történik, itt egy szobánkénti közös
+racsni-kulcsot osztanak meg egyszer, Olm-mal titkosítva.
 
 ### Signal
 
