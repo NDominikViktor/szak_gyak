@@ -134,7 +134,33 @@ autocannon -m POST -b '{"message":"teszt üzenet"}' -c 10 -d 10 http://localhost
     megbízható benchmarkoláshoz több egymást követő futtatás és az
     eredmények átlagolása szükséges.
 
-## Következő lépés (opcionális)
+## Ábrák és nyers mérési adatok reprodukálása
+
+A [Node.js vs. Deno vs. Bun](../research/node-deno-bun.md) oldalba ágyazott
+diagramok (titkosítási idő, warm-up kiszűrési arány) nem kézzel, hanem egy
+Python/matplotlib szkripttel készülnek:
+
+- **[`docs/benchmarks/generate_charts.py`](generate_charts.py)** — beolvassa
+  a `docs/benchmarks/results/` mappában lévő CSV-ket, és legenerálja a két
+  `.png` ábrát.
+- **[`docs/generate_diagrams.py`](../generate_diagrams.py)** — a sematikus
+  (nem mérési adatból származó) ábrákat készíti: architektúra-diagram,
+  OMEMO és Matrix protokoll-folyamatábrák.
+- A mérési CSV-ket maguk a benchmark szkriptek
+  ([`encrypt-benchmark-v2.mjs`](encrypt-benchmark-v2.mjs),
+  [`encrypt-benchmark-v3-pow2.mjs`](encrypt-benchmark-v3-pow2.mjs)) írják, a
+  `--csv=<útvonal>` kapcsolóval.
+- Az egész folyamat (mérés → CSV → ábra → dokumentum-build) egyben:
+  `scripts/run-pipeline.mjs` (a repó gyökerében).
+
+```bash
+pip install -r requirements.txt
+node scripts/run-pipeline.mjs       # mérés minden telepített runtime-on + ábrák + build
+# vagy csak az ábrák újragenerálása, meglévő CSV-kből:
+python docs/benchmarks/generate_charts.py
+python docs/generate_diagrams.py
+```
+
 
 A `clinic.js` eszközkészlettel (`clinic doctor -- node server.js`) vizuális
 flame graph és event loop delay riport is készíthető, ami mélyebb
