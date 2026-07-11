@@ -1,0 +1,27 @@
+# Forrás: docs/research/node-deno-bun.md 1. ábra táblázata + warm-up táblázat (trimmelt n = összes - eldobott).
+# A szórás (stddev) oszlop csak ott van kitöltve, ahol az eredeti mérési munkamenetben ez külön rögzítve lett
+# (1 MB-os pont, a Welch-t-próbához). A többi cellánál a nyers minták akkor még nem lettek elmentve fájlba,
+# ezért utólag nem rekonstruálhatók - ezt oldja meg a benchmark szkript --csv kapcsolója (ld. lentebb), amivel
+# egy újrafuttatás már minden mezőt (n, avg, stddev, p50, p95, cutoff) automatikusan elment.
+runtime,size_bytes,n,avg_ms,stddev_ms
+node,100,120,0.142,
+node,1000,80,0.137,
+node,10000,220,0.164,
+node,100000,220,0.317,
+node,1000000,180,1.907,0.498
+node,10000000,50,14.991,
+node,100000000,15,132.857,
+deno,100,270,0.116,
+deno,1000,120,0.123,
+deno,10000,120,0.181,
+deno,100000,240,0.715,
+deno,1000000,140,7.259,
+deno,10000000,50,48.112,
+deno,100000000,15,526.527,
+bun,100,180,0.090,
+bun,1000,270,0.089,
+bun,10000,240,0.115,
+bun,100000,270,0.253,
+bun,1000000,80,1.515,0.757
+bun,10000000,50,13.207,
+bun,100000000,15,89.847,

@@ -414,6 +414,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#uzenetkuldes-es-fogadas-esemenykezeles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Üzenetküldés és -fogadás — eseménykezelés
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kulcsfontossagu-tervezesi-elv" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -807,6 +818,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#uzenetkuldes-es-fogadas-esemenykezeles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Üzenetküldés és -fogadás — eseménykezelés
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kulcsfontossagu-tervezesi-elv" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -836,12 +858,14 @@
 
 <h1 id="rendszerarchitektura-attekintes">Rendszerarchitektúra — áttekintés<a class="headerlink" href="#rendszerarchitektura-attekintes" title="Permanent link">&para;</a></h1>
 <p>Az alábbi ábra a tervezett üzenetküldő rendszer nagy vonalakban vett
-felépítését mutatja: két kliens (böngészőben futó HTML/JS alkalmazás) és
-egy Node.js szerver.</p>
+felépítését mutatja: két, egymással egyenrangú kliens (böngészőben futó
+HTML/JS alkalmazás) és egy közöttük/alattuk elhelyezkedő Node.js szerver.
+A két kliens között nincs alá-fölé rendeltségi viszony, ezért az ábrán
+egymás mellett, tükrözve szerepelnek; a szerver csak közvetít köztük.</p>
 <p><img alt="Rendszerarchitektúra áttekintő ábra" src="../architecture-diagram.png" /></p>
-<p><em>3. ábra: a tervezett rendszer komponensei és az adatfolyam iránya.</em></p>
+<p><strong>1. ábra:</strong> a tervezett rendszer komponensei és az adatfolyam iránya.</p>
 <h2 id="a-komponensek-szerepe">A komponensek szerepe<a class="headerlink" href="#a-komponensek-szerepe" title="Permanent link">&para;</a></h2>
-<p><strong>Kliens (böngésző):</strong></p>
+<p><strong>Kliens (böngésző, mindkét oldalon azonos felépítéssel):</strong></p>
 <ul>
 <li><strong>UI</strong> — a felhasználói felület, ami a nyers (titkosítatlan) üzeneteket
   kezeli a felhasználó szemszögéből</li>
@@ -859,6 +883,44 @@ egy Node.js szerver.</p>
 <li><strong><code>worker_threads</code> pool</strong> — a szerveroldali feldolgozás
   párhuzamosítására, ha a terhelés indokolja</li>
 </ul>
+<h2 id="uzenetkuldes-es-fogadas-esemenykezeles">Üzenetküldés és -fogadás — eseménykezelés<a class="headerlink" href="#uzenetkuldes-es-fogadas-esemenykezeles" title="Permanent link">&para;</a></h2>
+<p>Az <strong>1. ábra</strong> nyilai szándékosan kétirányúak: a szerver-kliens kapcsolat
+nem egyszerű kérés-válasz, hanem tartós (WebSocket) kapcsolat, amin
+mindkét irányban önállóan, aszinkron módon közlekednek üzenetek és
+esemény-jellegű üzenetek.</p>
+<p><strong>Küldés (kliens → szerver → címzett kliens):</strong></p>
+<ol>
+<li>A UI réteg átadja a nyers üzenetet a WebCrypto rétegnek.</li>
+<li>A WebCrypto a Kulcstárolóból vett munkamenet-kulccsal titkosítja
+   (AES-GCM), és a ciphertext-et a szervernek küldi egy WebSocket-üzenet
+   formájában.</li>
+<li>A szerver a <code>worker_threads</code> pool segítségével (ha a terhelés
+   indokolja) ellenőrzi a metaadatokat (feladó, címzett, időbélyeg), majd
+   <strong>eseményként</strong> ("new-message") továbbítja a címzett aktív
+   WebSocket-kapcsolatára, a tartalom megismerése nélkül.</li>
+</ol>
+<p><strong>Fogadás (szerver → kliens, eseményalapú):</strong></p>
+<ol>
+<li>A kliens a WebSocket-kapcsolatán feliratkozik a szervertől érkező
+   eseményekre (<code>new-message</code>, <code>presence</code>, <code>delivery-ack</code>).</li>
+<li>Amikor a szerver egy <code>new-message</code> eseményt küld, a kliens
+   eseménykezelője elkapja azt, a ciphertext-et átadja a WebCrypto
+   rétegnek dekódolásra, majd a UI-t frissíti az új, immár nyers
+   üzenettel.</li>
+<li>A kliens visszaküld egy <code>delivery-ack</code> eseményt a szervernek (ez nem
+   az üzenettartalomra, csak a metaadatra vonatkozik), amit a szerver
+   továbbít a küldő félnek — így a küldő oldali UI jelezheti, hogy az
+   üzenet megérkezett.</li>
+<li>Kapcsolat-megszakadás esetén a kliens újracsatlakozáskor egy
+   <code>sync</code> eseménnyel lekéri a lekésett üzeneteket — ez a szerveroldali
+   session-kezelés feladata (ki milyen üzeneteket nem kapott még meg).</li>
+</ol>
+<p>Ez az eseményalapú modell azért fontos tervezési döntés, mert így a
+szerver nem kell, hogy "tudja", mikor van a kliens éppen aktív — a
+kapcsolat élettartama alatt bármikor érkezhet esemény bármelyik irányból,
+ami jól illeszkedik az XMPP stanza-alapú, aszinkron üzenetküldési
+modelljéhez is (ld. <a href="../research/chat-alternatives/">Chat alkalmazás
+alternatívák</a>).</p>
 <h2 id="kulcsfontossagu-tervezesi-elv">Kulcsfontosságú tervezési elv<a class="headerlink" href="#kulcsfontossagu-tervezesi-elv" title="Permanent link">&para;</a></h2>
 <p>A szerver <strong>soha nem fér hozzá</strong> a titkosítatlan üzenethez — a
 titkosítás/dekódolás kizárólag a kliens oldalon, a WebCrypto API-n

@@ -791,10 +791,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#kovetkezo-lepes-opcionalis" class="md-nav__link">
+  <a href="#abrak-es-nyers-meresi-adatok-reprodukalasa" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Következő lépés (opcionális)
+        Ábrák és nyers mérési adatok reprodukálása
       
     </span>
   </a>
@@ -900,10 +900,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#kovetkezo-lepes-opcionalis" class="md-nav__link">
+  <a href="#abrak-es-nyers-meresi-adatok-reprodukalasa" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Következő lépés (opcionális)
+        Ábrák és nyers mérési adatok reprodukálása
       
     </span>
   </a>
@@ -1089,7 +1089,30 @@ jelenti, hogy egyetlen mérés önmagában megtévesztő lehet — a
 megbízható benchmarkoláshoz több egymást követő futtatás és az
 eredmények átlagolása szükséges.</p>
 </div>
-<h2 id="kovetkezo-lepes-opcionalis">Következő lépés (opcionális)<a class="headerlink" href="#kovetkezo-lepes-opcionalis" title="Permanent link">&para;</a></h2>
+<h2 id="abrak-es-nyers-meresi-adatok-reprodukalasa">Ábrák és nyers mérési adatok reprodukálása<a class="headerlink" href="#abrak-es-nyers-meresi-adatok-reprodukalasa" title="Permanent link">&para;</a></h2>
+<p>A <a href="../../research/node-deno-bun/">Node.js vs. Deno vs. Bun</a> oldalba ágyazott
+diagramok (titkosítási idő, warm-up kiszűrési arány) nem kézzel, hanem egy
+Python/matplotlib szkripttel készülnek:</p>
+<ul>
+<li><strong><a href="../generate_charts.py"><code>docs/benchmarks/generate_charts.py</code></a></strong> — beolvassa
+  a <code>docs/benchmarks/results/</code> mappában lévő CSV-ket, és legenerálja a két
+  <code>.png</code> ábrát.</li>
+<li><strong><a href="../../generate_diagrams.py"><code>docs/generate_diagrams.py</code></a></strong> — a sematikus
+  (nem mérési adatból származó) ábrákat készíti: architektúra-diagram,
+  OMEMO és Matrix protokoll-folyamatábrák.</li>
+<li>A mérési CSV-ket maguk a benchmark szkriptek
+  (<a href="../encrypt-benchmark-v2.mjs"><code>encrypt-benchmark-v2.mjs</code></a>,
+  <a href="../encrypt-benchmark-v3-pow2.mjs"><code>encrypt-benchmark-v3-pow2.mjs</code></a>) írják, a
+  <code>--csv=&lt;útvonal&gt;</code> kapcsolóval.</li>
+<li>Az egész folyamat (mérés → CSV → ábra → dokumentum-build) egyben:
+  <code>scripts/run-pipeline.mjs</code> (a repó gyökerében).</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>node<span class="w"> </span>scripts/run-pipeline.mjs<span class="w">       </span><span class="c1"># mérés minden telepített runtime-on + ábrák + build</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># vagy csak az ábrák újragenerálása, meglévő CSV-kből:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>python<span class="w"> </span>docs/benchmarks/generate_charts.py
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>python<span class="w"> </span>docs/generate_diagrams.py
+</code></pre></div>
 <p>A <code>clinic.js</code> eszközkészlettel (<code>clinic doctor -- node server.js</code>) vizuális
 flame graph és event loop delay riport is készíthető, ami mélyebb
 betekintést ad a CPU-terhelés eloszlásába. Ez a jelen fázisban opcionális
