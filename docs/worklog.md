@@ -26,3 +26,23 @@
 | 2026-07-06 | 18:45 | 19:15 | writing | README és git-workflow dokumentáció frissítése |
 | 2026-07-06 | 20:30 | 22:00 | measurement | Deno és Bun telepítése, benchmark újrafuttatása mindhárom runtime-on |
 | 2026-07-06 | 22:00 | 22:30 | writing | Node/Deno/Bun dokumentum frissítése valós mérésekkel, statisztikai ellenőrzés |
+| 2026-07-07 | 22:30 | 23:40 | writing | Chat-alternatívák dokumentum kiegészítése protokoll- és titkosítási részletekkel (OMEMO, Olm/Megolm), titkosítási kutatás referenciákkal bővítve |
+| 2026-07-07 | 23:40 | 23:55 | writing | JavaScript/ECMAScript összefoglaló kiegészítése TypeScript-áttekintéssel; munkanapló egységes táblázat formátumra alakítása |
+| 2026-07-07 | 23:55 | 00:14 | coding | Runtime benchmark kiterjesztése 10 MB/100 MB méretekig, JIT warm-up kiszűrés implementálása, natív szerver API-k (Deno.serve, Bun.serve) hozzáadása |
+| 2026-07-08 | 21:30 | 22:23 | writing | Rendszerarchitektúra oldal és ábra elkészítése (1. konzulensi visszajelzésre reagálva) |
+| 2026-07-08 | 22:23 | 22:23 | writing | Lineáris regressziós modell, 95%-os konfidencia-intervallumos ábra, warm-up-elemzés és ábraszámozás hozzáadása a runtime benchmarkhoz |
+| 2026-07-08 | 22:23 | 22:23 | writing | Kulcskezelési szakasz és magyar nyelvű Double Ratchet hivatkozás hozzáadása, OMEMO/Megolm technikai részletek mélyítése |
+| 2026-07-08 | 22:23 | 22:43 | measurement | Kettes-hatvány alapú (128 B - 64 MiB) mérési sorozat hozzáadása módszertani finomításként |
+| 2026-07-10 | — | — | writing | 2. konzulensi visszajelzés feldolgozása: matplotlib-szkriptek (`generate_charts.py`, `generate_diagrams.py`) pótlása a repóba, mert korábban csak a kész `.png`-k kerültek be, a generáló kód nem |
+| 2026-07-10 | — | — | coding | Benchmark szkriptek (`encrypt-benchmark-v2.mjs`, `-v3-pow2.mjs`) kiegészítése: iterációszámok kitevős alakra formázva és méret alapján számolva (nem hardcode-olt táblázat), `--csv`/`--raw-samples`/`--iteration-multiplier` kapcsolók a gépfüggetlen, reprodukálható méréshez |
+| 2026-07-10 | — | — | writing | Architektúra-ábra szimmetrikus átrajzolása (két kliens oldalt, szerver alul/középen), üzenetfogadás és eseménykezelés szakasz hozzáadása |
+| 2026-07-10 | — | — | writing | OMEMO és Matrix (Olm/Megolm) protokoll-kommunikációs ábrák elkészítése és beillesztése a chat-alternatívák oldalba |
+| 2026-07-10 | — | — | writing | Ábraszámozás átállítása oldalankénti (nem globális) számozásra |
+| 2026-07-10 | — | — | coding | `scripts/run-pipeline.mjs` - egylépéses mérés → chart → dokumentum-build pipeline elkészítése |
+| 2026-07-10 | — | — | writing | Munkanapló kiegészítése a 07-07/07-08-i és a jelen munkamenet bejegyzéseivel |
+
+!!! note "Időbélyegek pontossága"
+    A 2026-07-07 és 2026-07-08-i sorok a git commit-időbélyegek alapján lettek
+    rekonstruálva utólag (a munkamenet közben nem lett minden lépés azonnal
+    naplózva) - ezért a kezdés/vég időpontok közelítőek. A 2026-07-10-i sorok
+    időpontjai a munkamenet lezárása után kerülnek pontosításra.
