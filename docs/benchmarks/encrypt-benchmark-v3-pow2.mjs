@@ -1,8 +1,16 @@
-// encrypt-benchmark-v2.mjs
-// v2: nagyobb méretek (10 MB, 100 MB) + JIT warm-up kiszűrés
-// Fut: node / deno run --allow-all / bun run encrypt-benchmark-v2.mjs
+// encrypt-benchmark-v3-pow2.mjs
+// v3: kettes-hatvány alapú méretek (KiB/MiB pontos többszörösei) - a
+// decimális (v2) méréssorozat finomított, precízebb változata.
+//
+// Fut: node / deno run --allow-all / bun run encrypt-benchmark-v3-pow2.mjs [opciók]
+//
+// Opciók (mindegyik elhagyható), megegyeznek a v2 szkriptével:
+//   --csv=<útvonal>            összesített statisztikák CSV-be fűzése
+//   --raw-samples=<útvonal>    nyers minták elmentése (warm-up szemléltetéshez)
+//   --iteration-multiplier=N   iterációszám N-szerese
 import { performance } from 'node:perf_hooks';
 import crypto from 'node:crypto';
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 
 async function generateKey() {
   return crypto.webcrypto.subtle.generateKey(
@@ -66,36 +74,79 @@ async function runSize(key, size, iterations) {
   const cutoff = estimateWarmupCutoff(samples);
   const trimmed = samples.slice(cutoff);
 
-  return { raw: stats(samples), trimmed: stats(trimmed), cutoff };
+  return { raw: stats(samples), trimmed: stats(trimmed), cutoff, samples };
+}
+
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const get = (flag) => {
+    const arg = args.find((a) => a.startsWith(`${flag}=`));
+    return arg ? arg.slice(flag.length + 1) : undefined;
+  };
+  return {
+    csvPath: get('--csv'),
+    rawSamplesPath: get('--raw-samples'),
+    iterationMultiplier: Number(get('--iteration-multiplier') ?? 1),
+  };
+}
+
+function ensureCsvHeader(path, header) {
+  if (!existsSync(path)) writeFileSync(path, header + '\n');
+}
+
+// Méret (byte) -> iterációszám, ugyanazzal a küszöb-logikával, mint a
+// decimális (v2) szkriptben - ld. ott a részletes indoklást.
+function iterationsFor(size) {
+  if (size <= 2 ** 16) return 300; // 128 B .. 64 KiB
+  if (size <= 2 ** 20) return 200; // 1 MiB
+  if (size <= 2 ** 23) return 50; // 8 MiB
+  return 15; // 64 MiB
 }
 
 async function runBenchmark() {
+  const { csvPath, rawSamplesPath, iterationMultiplier } = parseArgs();
   const key = await generateKey();
-  // kis/közepes méretek kevesebb iterációval (mint eddig), a nagyok
-  // kevesebb iterációval, mert azok abszolút ideje már nagyobb
-  // Kettes-hatvány alapú méretek (KiB/MiB pontos többszörösei),
-  // a decimális (v2) méréssorozat finomított, precízebb változata
-  const plan = [
-    { size: 128, iterations: 300 },          // 128 B
-    { size: 1_024, iterations: 300 },        // 1 KiB
-    { size: 8_192, iterations: 300 },        // 8 KiB
-    { size: 65_536, iterations: 300 },       // 64 KiB
-    { size: 1_048_576, iterations: 200 },    // 1 MiB
-    { size: 8_388_608, iterations: 50 },     // 8 MiB
-    { size: 67_108_864, iterations: 15 },    // 64 MiB
-  ];
+  // Kettes-hatvány alapú méretek (KiB/MiB pontos többszörösei), a
+  // decimális (v2) méréssorozat finomított, precízebb változata.
+  const sizes = [2 ** 7, 2 ** 10, 2 ** 13, 2 ** 16, 2 ** 20, 2 ** 23, 2 ** 26];
+  const plan = sizes.map((size) => ({
+    size,
+    iterations: Math.round(iterationsFor(size) * iterationMultiplier),
+  }));
+  const runtime = detectRuntime();
 
-  console.log(`Runtime: ${detectRuntime()}`);
+  if (csvPath) {
+    ensureCsvHeader(
+      csvPath,
+      'runtime,size_bytes,n,cutoff,raw_avg_ms,trimmed_avg_ms,trimmed_stddev_ms,trimmed_p50_ms,trimmed_p95_ms'
+    );
+  }
+  if (rawSamplesPath) {
+    ensureCsvHeader(rawSamplesPath, 'runtime,size_bytes,sample_index,time_ms');
+  }
+
+  console.log(`Runtime: ${runtime}`);
   console.log(
     'size(byte) | n | warmup_cutoff | raw_avg(ms) | trimmed_avg(ms) | trimmed_stddev | trimmed_p50 | trimmed_p95'
   );
   console.log('-'.repeat(110));
 
   for (const { size, iterations } of plan) {
-    const { raw, trimmed, cutoff } = await runSize(key, size, iterations);
+    const { raw, trimmed, cutoff, samples } = await runSize(key, size, iterations);
     console.log(
       `${size.toString().padEnd(11)} | ${String(iterations).padEnd(3)} | ${String(cutoff).padEnd(13)} | ${raw.avg.padEnd(11)} | ${trimmed.avg.padEnd(16)} | ${trimmed.stddev.padEnd(14)} | ${trimmed.p50.padEnd(11)} | ${trimmed.p95}`
     );
+
+    if (csvPath) {
+      appendFileSync(
+        csvPath,
+        `${runtime},${size},${trimmed.n},${cutoff},${raw.avg},${trimmed.avg},${trimmed.stddev},${trimmed.p50},${trimmed.p95}\n`
+      );
+    }
+    if (rawSamplesPath) {
+      const lines = samples.map((t, i) => `${runtime},${size},${i},${t.toFixed(4)}`).join('\n');
+      appendFileSync(rawSamplesPath, lines + '\n');
+    }
   }
 }
 

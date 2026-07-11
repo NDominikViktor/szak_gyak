@@ -1,3 +1,9 @@
 site/
 __pycache__/
 *.pyc
+
+# a run-pipeline.sh által generált, gépfüggő nyers mérési eredmények -
+# ezek nem kerülnek verziózásra, csak a belőlük készült ábrák és a
+# docs/*.md-be bemásolt, végleges táblázatok
+docs/benchmarks/results/latest-run*.csv
+
