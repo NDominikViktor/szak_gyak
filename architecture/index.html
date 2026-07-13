@@ -862,26 +862,66 @@ felépítését mutatja: két, egymással egyenrangú kliens (böngészőben fut
 HTML/JS alkalmazás) és egy közöttük/alattuk elhelyezkedő Node.js szerver.
 A két kliens között nincs alá-fölé rendeltségi viszony, ezért az ábrán
 egymás mellett, tükrözve szerepelnek; a szerver csak közvetít köztük.</p>
-<p><img alt="Rendszerarchitektúra áttekintő ábra" src="../architecture-diagram.png" /></p>
-<p><strong>1. ábra:</strong> a tervezett rendszer komponensei és az adatfolyam iránya.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph KA["Kliens A (böngésző)"]
+        direction TB
+        A_UI["UI"] &lt;--&gt; A_WC["WebCrypto API"]
+        A_WC &lt;--&gt; A_KS[("Kulcstároló (IndexedDB)")]
+    end
+
+    subgraph KB["Kliens B (böngésző)"]
+        direction TB
+        B_UI["UI"] &lt;--&gt; B_WC["WebCrypto API"]
+        B_WC &lt;--&gt; B_KS[("Kulcstároló (IndexedDB)")]
+    end
+
+    subgraph SZ["Szerver (Node.js)"]
+        direction TB
+        CONN["Kapcsolatkezelés (HTTP/WebSocket)"]
+        ACC["Fiók- és session-kezelés"]
+        RELAY["Üzenet-relay (csak ciphertext, 'vakon' továbbít)"]
+        POOL[["worker_threads pool"]]
+        CONN --&gt; ACC
+        CONN --&gt; RELAY
+        RELAY -. párhuzamosított feldolgozás .-&gt; POOL
+    end
+
+    A_WC -- "ciphertext (AES-GCM) + esemény" --&gt; CONN
+    CONN -- "esemény (new-message/ack/sync)" --&gt; A_WC
+    B_WC -- "ciphertext (AES-GCM) + esemény" --&gt; CONN
+    CONN -- "esemény (new-message/ack/sync)" --&gt; B_WC</code></pre>
+<p><strong>1. ábra:</strong> a tervezett rendszer komponensei és az adatfolyam iránya. A
+kapcsolódási pont mindkét kliens esetén konkrétan a <strong>WebCrypto API</strong>
+komponens — nem a kliens egésze —, mert csakis onnan hagyhatja el
+ciphertext formájában az üzenet a böngészőt, és csak oda érkezhet vissza
+dekódolásra. A szerver oldalán a <strong>Kapcsolatkezelés</strong> a belépési pont,
+ami a Fiók- és session-kezelés, illetve az Üzenet-relay felé ágazik szét.</p>
 <h2 id="a-komponensek-szerepe">A komponensek szerepe<a class="headerlink" href="#a-komponensek-szerepe" title="Permanent link">&para;</a></h2>
 <p><strong>Kliens (böngésző, mindkét oldalon azonos felépítéssel):</strong></p>
 <ul>
 <li><strong>UI</strong> — a felhasználói felület, ami a nyers (titkosítatlan) üzeneteket
   kezeli a felhasználó szemszögéből</li>
 <li><strong>WebCrypto API</strong> — itt történik a tényleges titkosítás/dekódolás,
-  mielőtt az üzenet elhagyja a klienst</li>
+  mielőtt az üzenet elhagyja a klienst; ez az egyetlen komponens, ami
+  ténylegesen kommunikál a szerverrel</li>
 <li><strong>Kulcstároló (IndexedDB)</strong> — a hosszú távú és session-kulcsok
   böngészőn belüli, perzisztens tárolása</li>
 </ul>
 <p><strong>Szerver (Node.js):</strong></p>
 <ul>
-<li><strong>Kapcsolatkezelés</strong> — HTTP/WebSocket kapcsolatok fogadása</li>
+<li><strong>Kapcsolatkezelés</strong> — HTTP/WebSocket kapcsolatok fogadása és
+  szétosztása a másik két komponens felé; ez az egyetlen komponens,
+  amivel a kliensek közvetlenül kapcsolatba lépnek</li>
+<li><strong>Fiók- és session-kezelés</strong> — bejelentkezés, jogosultságok, illetve
+  annak nyilvántartása, mely kliens melyik WebSocket-kapcsolaton aktív
+  éppen (ez kell a <code>new-message</code> esemény célba juttatásához)</li>
 <li><strong>Üzenet-relay</strong> — a titkosított (ciphertext) üzenetek továbbítása a
-  címzett kliens felé, a tartalom megismerése nélkül ("vak" relay)</li>
-<li><strong>Fiók- és session-kezelés</strong> — bejelentkezés, jogosultságok</li>
-<li><strong><code>worker_threads</code> pool</strong> — a szerveroldali feldolgozás
-  párhuzamosítására, ha a terhelés indokolja</li>
+  címzett kliens felé, a tartalom megismerése nélkül ("vak" relay); a
+  metaadatok (feladó, címzett, időbélyeg) ellenőrzése is itt történik</li>
+<li><strong><code>worker_threads</code> pool</strong> — a relay által induított, CPU-igényesebb
+  feldolgozási lépések (pl. nagyobb üzenetek metaadat-validálása)
+  párhuzamosítására, ha a terhelés indokolja — maga a relay logika ettől
+  függetlenül, egyetlen szálon fut</li>
 </ul>
 <h2 id="uzenetkuldes-es-fogadas-esemenykezeles">Üzenetküldés és -fogadás — eseménykezelés<a class="headerlink" href="#uzenetkuldes-es-fogadas-esemenykezeles" title="Permanent link">&para;</a></h2>
 <p>Az <strong>1. ábra</strong> nyilai szándékosan kétirányúak: a szerver-kliens kapcsolat

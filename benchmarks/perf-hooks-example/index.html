@@ -1090,28 +1090,70 @@ megbízható benchmarkoláshoz több egymást követő futtatás és az
 eredmények átlagolása szükséges.</p>
 </div>
 <h2 id="abrak-es-nyers-meresi-adatok-reprodukalasa">Ábrák és nyers mérési adatok reprodukálása<a class="headerlink" href="#abrak-es-nyers-meresi-adatok-reprodukalasa" title="Permanent link">&para;</a></h2>
-<p>A <a href="../../research/node-deno-bun/">Node.js vs. Deno vs. Bun</a> oldalba ágyazott
-diagramok (titkosítási idő, warm-up kiszűrési arány) nem kézzel, hanem egy
-Python/matplotlib szkripttel készülnek:</p>
+<p>A dokumentációban kétféle ábra szerepel, tudatosan két különböző eszközzel:</p>
+<ul>
+<li><strong>Mérési adatból származó chartok</strong> (titkosítási idő, warm-up
+  kiszűrési arány) — ezeket Python/matplotlib generálja, mert tényleges
+  számsorokat kell ábrázolniuk (log-skála, konfidencia-intervallum,
+  illesztett regresszió).</li>
+<li><strong>Sematikus ábrák</strong> (architektúra, protokoll-folyamatok) — ezek
+  mostantól <a href="https://mermaid.js.org/">Mermaid</a> diagramok, közvetlenül a
+  Markdown-fájlokba ágyazva (a MkDocs Material natívan renderöli őket a
+  böngészőben). Korábban ezeket is matplotlib-bel rajzoltuk, de
+  konzulensi visszajelzés alapján ez nem praktikus szekvenciadiagramhoz
+  (nincs natív lifeline/nyíl-fogalma), ráadásul karbantarthatóbb, ha a
+  diagram forrása maga is szöveg, ami a Markdownban verziózható.</li>
+</ul>
+<p><strong>Mérési chartok:</strong></p>
 <ul>
 <li><strong><a href="../generate_charts.py"><code>docs/benchmarks/generate_charts.py</code></a></strong> — beolvassa
-  a <code>docs/benchmarks/results/</code> mappában lévő CSV-ket, és legenerálja a két
-  <code>.png</code> ábrát.</li>
-<li><strong><a href="../../generate_diagrams.py"><code>docs/generate_diagrams.py</code></a></strong> — a sematikus
-  (nem mérési adatból származó) ábrákat készíti: architektúra-diagram,
-  OMEMO és Matrix protokoll-folyamatábrák.</li>
+  a <code>docs/benchmarks/results/</code> mappában lévő CSV-ket, és legenerálja a
+  <code>.png</code> ábrákat (a legfrissebb futtatás adatával, ha van, egyébként a
+  dokumentált korábbi értékekre esik vissza).</li>
 <li>A mérési CSV-ket maguk a benchmark szkriptek
   (<a href="../encrypt-benchmark-v2.mjs"><code>encrypt-benchmark-v2.mjs</code></a>,
   <a href="../encrypt-benchmark-v3-pow2.mjs"><code>encrypt-benchmark-v3-pow2.mjs</code></a>) írják, a
-  <code>--csv=&lt;útvonal&gt;</code> kapcsolóval.</li>
-<li>Az egész folyamat (mérés → CSV → ábra → dokumentum-build) egyben:
-  <code>scripts/run-pipeline.mjs</code> (a repó gyökerében).</li>
+  <code>--csv=&lt;útvonal&gt;</code> és <code>--raw-samples=&lt;útvonal&gt;</code> kapcsolókkal.</li>
 </ul>
+<p><strong>A teljes pipeline adatfolyama</strong> (mérés → CSV → ábra → dokumentum-build,
+<code>scripts/run-pipeline.mjs</code>):</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Meres["Mérés (node/deno/bun)"]
+        BM1["encrypt-benchmark-v2.mjs&lt;br/&gt;(decimális méretek)"]
+        BM2["encrypt-benchmark-v3-pow2.mjs&lt;br/&gt;(2-hatvány méretek)"]
+    end
+
+    subgraph Adat["docs/benchmarks/results/"]
+        CSV["latest-run*.csv&lt;br/&gt;(n, avg, stddev, p50, p95, cutoff)"]
+        RAW["latest-run*-raw-samples.csv&lt;br/&gt;(minden egyes mért minta)"]
+    end
+
+    GC["generate_charts.py&lt;br/&gt;(Python / matplotlib)"]
+
+    subgraph Kimenet["docs/benchmarks/*.png"]
+        PNG1["encryption-chart-v3.png"]
+        PNG2["warmup-cutoff-chart.png"]
+        PNG3["warmup-illustration-chart.png"]
+    end
+
+    MK["mkdocs build"] --&gt; SITE["site/ → gh-deploy → GitHub Pages"]
+
+    BM1 -- "--csv" --&gt; CSV
+    BM1 -- "--raw-samples" --&gt; RAW
+    BM2 -- "--csv" --&gt; CSV
+    BM2 -- "--raw-samples" --&gt; RAW
+    CSV --&gt; GC
+    RAW --&gt; GC
+    GC --&gt; PNG1
+    GC --&gt; PNG2
+    GC --&gt; PNG3
+    PNG1 --&gt; MK
+    PNG2 --&gt; MK
+    PNG3 --&gt; MK</code></pre>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>node<span class="w"> </span>scripts/run-pipeline.mjs<span class="w">       </span><span class="c1"># mérés minden telepített runtime-on + ábrák + build</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># vagy csak az ábrák újragenerálása, meglévő CSV-kből:</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>python<span class="w"> </span>docs/benchmarks/generate_charts.py
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>python<span class="w"> </span>docs/generate_diagrams.py
 </code></pre></div>
 <p>A <code>clinic.js</code> eszközkészlettel (<code>clinic doctor -- node server.js</code>) vizuális
 flame graph és event loop delay riport is készíthető, ami mélyebb

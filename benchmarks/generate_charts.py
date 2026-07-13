@@ -100,9 +100,19 @@ def plot_encryption_chart():
         avgs = [float(r["avg_ms"]) for r in points]
 
         ax.plot(
-            sizes, avgs, "o-", color=RUNTIME_COLORS[runtime],
-            label=RUNTIME_LABELS[runtime], linewidth=1.8, markersize=5,
+            sizes, avgs, "o", color=RUNTIME_COLORS[runtime],
+            label=RUNTIME_LABELS[runtime], markersize=5,
         )
+
+        # lineáris regresszió (idő = a + b * méret), szaggatott vonallal
+        n_pts = len(sizes)
+        mean_x = sum(sizes) / n_pts
+        mean_y = sum(avgs) / n_pts
+        b = sum((x - mean_x) * (y - mean_y) for x, y in zip(sizes, avgs)) / sum((x - mean_x) ** 2 for x in sizes)
+        a = mean_y - b * mean_x
+        fit_x = [min(sizes), max(sizes)]
+        fit_y = [a + b * x for x in fit_x]
+        ax.plot(fit_x, fit_y, "--", color=RUNTIME_COLORS[runtime], linewidth=1.2, alpha=0.7)
 
         # 95%-os CI csak azoknál a pontoknál, ahol van rögzített szórás
         for r in points:
@@ -122,7 +132,7 @@ def plot_encryption_chart():
     ax.set_ylabel("Titkosítási idő (ms, log skála)")
     ax.set_title("AES-GCM titkosítási idő üzenetméret és futtatókörnyezet szerint")
     ax.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.6)
-    ax.legend()
+    ax.legend(title="folytonos: mérés, szaggatott: lineáris illesztés")
     fig.tight_layout()
     out = HERE / "encryption-chart-v3.png"
     fig.savefig(out)

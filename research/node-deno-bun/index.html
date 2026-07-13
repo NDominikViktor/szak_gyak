@@ -1139,10 +1139,10 @@ kevesebb (nagy méreteknél, az abszolút futásidő miatt) iterációt futtat.
 Egy mozgóablakos becslő (20 minta/ablak) megkeresi, hol stabilizálódik a
 mért idő (egymást követő ablak-átlagok közötti relatív változás 2% alá
 csökken), és az addig eltelt mintákat warm-up mintaként eldobja.</p>
-<p><strong>2. ábra</strong> a ténylegesen eldobott minták arányát mutatja méretenként és
+<p><strong>1. ábra</strong> a ténylegesen eldobott minták arányát mutatja méretenként és
 futtatókörnyezetenként:</p>
 <p><img alt="Warm-up kiszűrési arány" src="../../benchmarks/warmup-cutoff-chart.png" /></p>
-<p><em>2. ábra: a warm-up-becslő által eldobott minták aránya az összes
+<p><em>1. ábra: a warm-up-becslő által eldobott minták aránya az összes
 mintához képest.</em></p>
 <table>
 <thead>
@@ -1211,16 +1211,29 @@ megbízható warm-up-becsléshez.</p>
 futtatható (pl. <code>node scripts/run-pipeline.mjs --big</code> = ötszörös
 iterációszám), így a nagy méretű (10 MB/100 MB) pontok is elég mintát
 kapnak ahhoz, hogy a mozgóablakos becslő stabilizációs pontot
-találjon. Ez a finomítás a jelen dokumentáció lezárásáig még nem lett
-újrafuttatva a mérési gépen — a következő munkamenet feladata.</p>
+találjon.</p>
 </div>
+<p>A warm-up-becslő tényleges hatását egy konkrét mérési idősoron (a
+legkisebb, 100 B-os üzenetméreten) mutatja be a <strong>2. ábra</strong>: minden
+pont egy nyers mérési minta (iterációnkénti titkosítási idő), a
+függőleges vonal pedig a mozgóablakos becslő által talált cutoff-pont —
+jól látszik, hogy az első néhány tucat iteráció még jelentősen lassabb
+(JIT-bemelegedés), utána a mérés stabilizálódik:</p>
+<p><img alt="Warm-up hatás szemléltetése" src="../../benchmarks/warmup-illustration-chart.png" /></p>
+<p><em>2. ábra: nyers mérési idők iterációnként, a becsült warm-up-cutoff-fal
+jelölve. A <code>generate_charts.py</code> a <code>--raw-samples</code> kapcsolóval mentett
+nyers mintákból generálja, ld. <a href="../../benchmarks/perf-hooks-example/">Ábrák és nyers mérési adatok
+reprodukálása</a>.</em></p>
 <h2 id="1-titkositasi-muvelet-ideje-aes-gcm-100-b-100-000-000-b-warm-up-kiszurve">1. Titkosítási művelet ideje (AES-GCM), 100 B - 100 000 000 B, warm-up kiszűrve<a class="headerlink" href="#1-titkositasi-muvelet-ideje-aes-gcm-100-b-100-000-000-b-warm-up-kiszurve" title="Permanent link">&para;</a></h2>
-<p><strong>1. ábra</strong> a mért átlagos titkosítási időt mutatja, 95%-os
-konfidencia-intervallummal:</p>
+<p><strong>3. ábra</strong> a mért átlagos titkosítási időt mutatja, 95%-os
+konfidencia-intervallummal és az illesztett lineáris regressziós
+modellel (ld. lentebb):</p>
 <p><img alt="AES-GCM titkosítási idő üzenetméret és futtatókörnyezet szerint" src="../../benchmarks/encryption-chart-v3.png" /></p>
-<p><em>1. ábra: átlagos titkosítási idő üzenetméret és futtatókörnyezet
+<p><em>3. ábra: átlagos titkosítási idő üzenetméret és futtatókörnyezet
 szerint, logaritmikus skálán. A hibasáv 95%-os konfidencia-intervallumot
-jelöl (±1,96·szórás/√n), nem a nyers szórást.</em></p>
+jelöl (±1,96·szórás/√n), nem a nyers szórást. A szaggatott vonal a
+lineáris regressziós modell illesztése (ld. "Az üzenetméret és a
+titkosítási idő közötti összefüggés" szakasz).</em></p>
 <table>
 <thead>
 <tr>

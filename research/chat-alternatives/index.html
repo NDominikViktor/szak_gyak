@@ -1002,10 +1002,27 @@ meglévő XMPP-szerverhez. Mivel ez csak kiegészítés, egy szerver
 teljesen szabványos maradhat úgy is, hogy sosem támogatja az OMEMO-t.
 Népszerű szerver-implementációk: <a href="https://prosody.im/">Prosody</a>,
 <a href="https://www.ejabberd.im/">ejabberd</a>.</p>
-<p>Az alábbi ábra a fent leírt lépéseket foglalja össze folyamat szinten:</p>
-<p><img alt="OMEMO üzenetküldési folyamat" src="../omemo-flow-diagram.png" /></p>
+<p>Az alábbi szekvenciadiagram a fent leírt lépéseket foglalja össze, a
+visszaigazolásokkal (ack/receipt) együtt — a valóságban ez sem
+egyirányú: a szerver és a felek is nyugtázzák az egyes lépéseket:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant K as Küldő kliens
+    participant Sz as XMPP szerver (PubSub/PEP)
+    participant C as Címzett kliens
+
+    C-&gt;&gt;Sz: 1. Kulcscsomag (bundle) publikálása&lt;br/&gt;(identitáskulcs + aláírt PreKey + ~100 egyszeri PreKey)
+    Sz--&gt;&gt;C: ack (tárolva)
+    K-&gt;&gt;Sz: 2. Bundle lekérése (XEP-0060 / XEP-0163)
+    Sz--&gt;&gt;K: bundle (egy egyszeri PreKey elhasználva)
+    Note over K: 3. X3DH kulcscsere - közös titok létrehozása
+    K-&gt;&gt;Sz: 4. Első üzenet (Double Ratchet init + ciphertext)
+    Sz-&gt;&gt;C: üzenet továbbítása
+    C--&gt;&gt;Sz: delivery receipt (XEP-0184)
+    Sz--&gt;&gt;K: receipt továbbítása
+    Note over K,C: 5. Minden további üzenetnél új ratchet-lépés&lt;br/&gt;(forward secrecy: régi kulcs nem fejt vissza újat)</code></pre>
 <p><strong>1. ábra:</strong> OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
-publikálásától az első titkosított üzenetig.</p>
+publikálásától az első titkosított üzenetig, a szerver és a felek
+visszaigazolásaival együtt.</p>
 <h3 id="matrix">Matrix<a class="headerlink" href="#matrix" title="Permanent link">&para;</a></h3>
 <p><strong>Hivatalos oldal:</strong> <a href="https://matrix.org/">matrix.org</a> | <strong>Specifikáció:</strong>
 <a href="https://spec.matrix.org/">spec.matrix.org</a></p>
@@ -1032,9 +1049,26 @@ nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 (<a href="https://github.com/element-hq/synapse">Synapse</a>) admin oldalról
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. <a href="https://conduit.rs/">Conduit</a>) ezen próbálnak javítani.</p>
-<p>Az alábbi ábra a Megolm session-kulcs terjesztésének és a csoportos
-titkosításnak a folyamatát mutatja:</p>
-<p><img alt="Matrix Olm/Megolm üzenetküldési folyamat" src="../matrix-flow-diagram.png" /></p>
+<p>Az alábbi szekvenciadiagram a Megolm session-kulcs terjesztésének és a
+csoportos titkosításnak a folyamatát mutatja, a szoba többi tagjának
+visszaigazolásaival együtt:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant K as Küldő kliens
+    participant Sz as Home szerver (esemény-DAG)
+    participant T as Szoba többi tagja
+
+    K-&gt;&gt;Sz: 1. Olm páronkénti session felépítése (ha még nincs)
+    Sz-&gt;&gt;T: session-ajánlat továbbítása
+    T--&gt;&gt;Sz: session ack
+    Sz--&gt;&gt;K: session ack
+    Note over K: 2. Megolm session-kulcs generálása&lt;br/&gt;(szobánként + küldő eszközönként egy)
+    K-&gt;&gt;Sz: 3. Session-kulcs, Olm-mal titkosítva
+    Sz-&gt;&gt;T: session-kulcs továbbítása (m.room_key)
+    T--&gt;&gt;Sz: ack
+    K-&gt;&gt;Sz: 4. Üzenet, Megolm-mal titkosítva (közös racsni)
+    Sz-&gt;&gt;T: esemény terjesztése (DAG-ba fűzve)
+    T--&gt;&gt;Sz: m.receipt (olvasási visszaigazolás)
+    Sz--&gt;&gt;K: receipt továbbítása</code></pre>
 <p><strong>2. ábra:</strong> Matrix (Olm/Megolm) — csoportos üzenetküldés folyamata.
 Jól látszik a különbség az OMEMO-hoz (1. ábra) képest: ott minden
 üzenethez páronkénti ratchet-lépés történik, itt egy szobánkénti közös
