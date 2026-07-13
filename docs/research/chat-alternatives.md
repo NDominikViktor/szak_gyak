@@ -47,12 +47,31 @@ teljesen szabványos maradhat úgy is, hogy sosem támogatja az OMEMO-t.
 Népszerű szerver-implementációk: [Prosody](https://prosody.im/),
 [ejabberd](https://www.ejabberd.im/).
 
-Az alábbi ábra a fent leírt lépéseket foglalja össze folyamat szinten:
+Az alábbi szekvenciadiagram a fent leírt lépéseket foglalja össze, a
+visszaigazolásokkal (ack/receipt) együtt — a valóságban ez sem
+egyirányú: a szerver és a felek is nyugtázzák az egyes lépéseket:
 
-![OMEMO üzenetküldési folyamat](omemo-flow-diagram.png)
+```mermaid
+sequenceDiagram
+    participant K as Küldő kliens
+    participant Sz as XMPP szerver (PubSub/PEP)
+    participant C as Címzett kliens
+
+    C->>Sz: 1. Kulcscsomag (bundle) publikálása<br/>(identitáskulcs + aláírt PreKey + ~100 egyszeri PreKey)
+    Sz-->>C: ack (tárolva)
+    K->>Sz: 2. Bundle lekérése (XEP-0060 / XEP-0163)
+    Sz-->>K: bundle (egy egyszeri PreKey elhasználva)
+    Note over K: 3. X3DH kulcscsere - közös titok létrehozása
+    K->>Sz: 4. Első üzenet (Double Ratchet init + ciphertext)
+    Sz->>C: üzenet továbbítása
+    C-->>Sz: delivery receipt (XEP-0184)
+    Sz-->>K: receipt továbbítása
+    Note over K,C: 5. Minden további üzenetnél új ratchet-lépés<br/>(forward secrecy: régi kulcs nem fejt vissza újat)
+```
 
 **1. ábra:** OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
-publikálásától az első titkosított üzenetig.
+publikálásától az első titkosított üzenetig, a szerver és a felek
+visszaigazolásaival együtt.
 
 ### Matrix
 
@@ -83,10 +102,29 @@ nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. [Conduit](https://conduit.rs/)) ezen próbálnak javítani.
 
-Az alábbi ábra a Megolm session-kulcs terjesztésének és a csoportos
-titkosításnak a folyamatát mutatja:
+Az alábbi szekvenciadiagram a Megolm session-kulcs terjesztésének és a
+csoportos titkosításnak a folyamatát mutatja, a szoba többi tagjának
+visszaigazolásaival együtt:
 
-![Matrix Olm/Megolm üzenetküldési folyamat](matrix-flow-diagram.png)
+```mermaid
+sequenceDiagram
+    participant K as Küldő kliens
+    participant Sz as Home szerver (esemény-DAG)
+    participant T as Szoba többi tagja
+
+    K->>Sz: 1. Olm páronkénti session felépítése (ha még nincs)
+    Sz->>T: session-ajánlat továbbítása
+    T-->>Sz: session ack
+    Sz-->>K: session ack
+    Note over K: 2. Megolm session-kulcs generálása<br/>(szobánként + küldő eszközönként egy)
+    K->>Sz: 3. Session-kulcs, Olm-mal titkosítva
+    Sz->>T: session-kulcs továbbítása (m.room_key)
+    T-->>Sz: ack
+    K->>Sz: 4. Üzenet, Megolm-mal titkosítva (közös racsni)
+    Sz->>T: esemény terjesztése (DAG-ba fűzve)
+    T-->>Sz: m.receipt (olvasási visszaigazolás)
+    Sz-->>K: receipt továbbítása
+```
 
 **2. ábra:** Matrix (Olm/Megolm) — csoportos üzenetküldés folyamata.
 Jól látszik a különbség az OMEMO-hoz (1. ábra) képest: ott minden
