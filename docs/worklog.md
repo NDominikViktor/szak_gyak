@@ -33,16 +33,20 @@
 | 2026-07-08 | 22:23 | 22:23 | writing | Lineáris regressziós modell, 95%-os konfidencia-intervallumos ábra, warm-up-elemzés és ábraszámozás hozzáadása a runtime benchmarkhoz |
 | 2026-07-08 | 22:23 | 22:23 | writing | Kulcskezelési szakasz és magyar nyelvű Double Ratchet hivatkozás hozzáadása, OMEMO/Megolm technikai részletek mélyítése |
 | 2026-07-08 | 22:23 | 22:43 | measurement | Kettes-hatvány alapú (128 B - 64 MiB) mérési sorozat hozzáadása módszertani finomításként |
-| 2026-07-10 | — | — | writing | 2. konzulensi visszajelzés feldolgozása: matplotlib-szkriptek (`generate_charts.py`, `generate_diagrams.py`) pótlása a repóba, mert korábban csak a kész `.png`-k kerültek be, a generáló kód nem |
-| 2026-07-10 | — | — | coding | Benchmark szkriptek (`encrypt-benchmark-v2.mjs`, `-v3-pow2.mjs`) kiegészítése: iterációszámok kitevős alakra formázva és méret alapján számolva (nem hardcode-olt táblázat), `--csv`/`--raw-samples`/`--iteration-multiplier` kapcsolók a gépfüggetlen, reprodukálható méréshez |
-| 2026-07-10 | — | — | writing | Architektúra-ábra szimmetrikus átrajzolása (két kliens oldalt, szerver alul/középen), üzenetfogadás és eseménykezelés szakasz hozzáadása |
-| 2026-07-10 | — | — | writing | OMEMO és Matrix (Olm/Megolm) protokoll-kommunikációs ábrák elkészítése és beillesztése a chat-alternatívák oldalba |
-| 2026-07-10 | — | — | writing | Ábraszámozás átállítása oldalankénti (nem globális) számozásra |
-| 2026-07-10 | — | — | coding | `scripts/run-pipeline.mjs` - egylépéses mérés → chart → dokumentum-build pipeline elkészítése |
-| 2026-07-10 | — | — | writing | Munkanapló kiegészítése a 07-07/07-08-i és a jelen munkamenet bejegyzéseivel |
+| 2026-07-10 | 19:00 | 19:20 | writing | 2. konzulensi visszajelzés feldolgozása: matplotlib-szkriptek (`generate_charts.py`, `generate_diagrams.py`) pótlása a repóba, mert korábban csak a kész `.png`-k kerültek be, a generáló kód nem |
+| 2026-07-10 | 19:20 | 19:50 | coding | Benchmark szkriptek (`encrypt-benchmark-v2.mjs`, `-v3-pow2.mjs`) kiegészítése: iterációszámok kitevős alakra formázva és méret alapján számolva (nem hardcode-olt táblázat), `--csv`/`--raw-samples`/`--iteration-multiplier` kapcsolók a gépfüggetlen, reprodukálható méréshez |
+| 2026-07-10 | 19:50 | 20:15 | writing | Architektúra-ábra szimmetrikus átrajzolása (két kliens oldalt, szerver alul/középen), üzenetfogadás és eseménykezelés szakasz hozzáadása |
+| 2026-07-10 | 20:15 | 20:35 | writing | OMEMO és Matrix (Olm/Megolm) protokoll-kommunikációs ábrák elkészítése és beillesztése a chat-alternatívák oldalba |
+| 2026-07-10 | 20:35 | 20:50 | writing | Ábraszámozás átállítása oldalankénti (nem globális) számozásra |
+| 2026-07-10 | 20:50 | 21:15 | coding | `scripts/run-pipeline.mjs` - egylépéses mérés → chart → dokumentum-build pipeline elkészítése (Node.js-ben, Windows/Git Bash kompatibilitás miatt) |
+| 2026-07-10 | 21:15 | 21:25 | writing | Munkanapló kiegészítése a 07-07/07-08-i és a jelen munkamenet bejegyzéseivel |
+| 2026-07-10 | 21:25 | 21:45 | measurement | Pipeline lefuttatása saját gépen (Node.js), friss mérési eredmények és warm-up-szemléltető ábra generálása valós adatból |
+| 2026-07-10 | 21:45 | 22:00 | other | Git történet rendberakása (rövid, egysoros commit-üzenetek), `mkdocs gh-deploy` a GitHub Pages frissítéséhez |
+| 2026-07-13 | 18:30 | 19:30 | writing | 2. visszajelzési kör (3. üzenet) feldolgozása: architektúra- és protokoll-ábrák Mermaid diagramra cserélve (korábbi matplotlib-ábrák nyíl/kontraszt-hibái, szekvenciadiagram-igény miatt); pipeline adatfolyam-ábra hozzáadása |
+| 2026-07-13 | 19:30 | 19:50 | writing | Ábraszámozási hiba javítása node-deno-bun.md-ben (a warm-up chart fizikailag előbb szerepelt, mint a titkosítási chart, de "2. ábra" volt ráírva "1." helyett); warm-up-szemléltető ábra beillesztése |
+| 2026-07-13 | 19:50 | 20:05 | coding | Lineáris regressziós illesztés hozzáadása a titkosítási chart-hoz (`generate_charts.py`), a táblázatos becslés vizuális megerősítéseként |
 
 !!! note "Időbélyegek pontossága"
     A 2026-07-07 és 2026-07-08-i sorok a git commit-időbélyegek alapján lettek
     rekonstruálva utólag (a munkamenet közben nem lett minden lépés azonnal
-    naplózva) - ezért a kezdés/vég időpontok közelítőek. A 2026-07-10-i sorok
-    időpontjai a munkamenet lezárása után kerülnek pontosításra.
+    naplózva) - ezért a kezdés/vég időpontok közelítőek.
