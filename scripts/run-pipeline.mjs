@@ -64,8 +64,6 @@ run('bun', ['run', ...pow2Args([])], 'Bun (2-hatvány méretek)');
 console.log('==> Chartok generálása');
 let py = spawnSync('python', ['docs/benchmarks/generate_charts.py'], { cwd: ROOT, stdio: 'inherit' });
 if (py.status !== 0) spawnSync('python3', ['docs/benchmarks/generate_charts.py'], { cwd: ROOT, stdio: 'inherit' });
-py = spawnSync('python', ['docs/generate_diagrams.py'], { cwd: ROOT, stdio: 'inherit' });
-if (py.status !== 0) spawnSync('python3', ['docs/generate_diagrams.py'], { cwd: ROOT, stdio: 'inherit' });
 
 console.log('==> MkDocs build');
 spawnSync('python', ['-m', 'mkdocs', 'build'], { cwd: ROOT, stdio: 'inherit' });

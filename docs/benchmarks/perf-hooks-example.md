@@ -136,30 +136,77 @@ autocannon -m POST -b '{"message":"teszt üzenet"}' -c 10 -d 10 http://localhost
 
 ## Ábrák és nyers mérési adatok reprodukálása
 
-A [Node.js vs. Deno vs. Bun](../research/node-deno-bun.md) oldalba ágyazott
-diagramok (titkosítási idő, warm-up kiszűrési arány) nem kézzel, hanem egy
-Python/matplotlib szkripttel készülnek:
+A dokumentációban kétféle ábra szerepel, tudatosan két különböző eszközzel:
+
+- **Mérési adatból származó chartok** (titkosítási idő, warm-up
+  kiszűrési arány) — ezeket Python/matplotlib generálja, mert tényleges
+  számsorokat kell ábrázolniuk (log-skála, konfidencia-intervallum,
+  illesztett regresszió).
+- **Sematikus ábrák** (architektúra, protokoll-folyamatok) — ezek
+  mostantól [Mermaid](https://mermaid.js.org/) diagramok, közvetlenül a
+  Markdown-fájlokba ágyazva (a MkDocs Material natívan renderöli őket a
+  böngészőben). Korábban ezeket is matplotlib-bel rajzoltuk, de
+  konzulensi visszajelzés alapján ez nem praktikus szekvenciadiagramhoz
+  (nincs natív lifeline/nyíl-fogalma), ráadásul karbantarthatóbb, ha a
+  diagram forrása maga is szöveg, ami a Markdownban verziózható.
+
+**Mérési chartok:**
 
 - **[`docs/benchmarks/generate_charts.py`](generate_charts.py)** — beolvassa
-  a `docs/benchmarks/results/` mappában lévő CSV-ket, és legenerálja a két
-  `.png` ábrát.
-- **[`docs/generate_diagrams.py`](../generate_diagrams.py)** — a sematikus
-  (nem mérési adatból származó) ábrákat készíti: architektúra-diagram,
-  OMEMO és Matrix protokoll-folyamatábrák.
+  a `docs/benchmarks/results/` mappában lévő CSV-ket, és legenerálja a
+  `.png` ábrákat (a legfrissebb futtatás adatával, ha van, egyébként a
+  dokumentált korábbi értékekre esik vissza).
 - A mérési CSV-ket maguk a benchmark szkriptek
   ([`encrypt-benchmark-v2.mjs`](encrypt-benchmark-v2.mjs),
   [`encrypt-benchmark-v3-pow2.mjs`](encrypt-benchmark-v3-pow2.mjs)) írják, a
-  `--csv=<útvonal>` kapcsolóval.
-- Az egész folyamat (mérés → CSV → ábra → dokumentum-build) egyben:
-  `scripts/run-pipeline.mjs` (a repó gyökerében).
+  `--csv=<útvonal>` és `--raw-samples=<útvonal>` kapcsolókkal.
+
+**A teljes pipeline adatfolyama** (mérés → CSV → ábra → dokumentum-build,
+`scripts/run-pipeline.mjs`):
+
+```mermaid
+flowchart LR
+    subgraph Meres["Mérés (node/deno/bun)"]
+        BM1["encrypt-benchmark-v2.mjs<br/>(decimális méretek)"]
+        BM2["encrypt-benchmark-v3-pow2.mjs<br/>(2-hatvány méretek)"]
+    end
+
+    subgraph Adat["docs/benchmarks/results/"]
+        CSV["latest-run*.csv<br/>(n, avg, stddev, p50, p95, cutoff)"]
+        RAW["latest-run*-raw-samples.csv<br/>(minden egyes mért minta)"]
+    end
+
+    GC["generate_charts.py<br/>(Python / matplotlib)"]
+
+    subgraph Kimenet["docs/benchmarks/*.png"]
+        PNG1["encryption-chart-v3.png"]
+        PNG2["warmup-cutoff-chart.png"]
+        PNG3["warmup-illustration-chart.png"]
+    end
+
+    MK["mkdocs build"] --> SITE["site/ → gh-deploy → GitHub Pages"]
+
+    BM1 -- "--csv" --> CSV
+    BM1 -- "--raw-samples" --> RAW
+    BM2 -- "--csv" --> CSV
+    BM2 -- "--raw-samples" --> RAW
+    CSV --> GC
+    RAW --> GC
+    GC --> PNG1
+    GC --> PNG2
+    GC --> PNG3
+    PNG1 --> MK
+    PNG2 --> MK
+    PNG3 --> MK
+```
 
 ```bash
 pip install -r requirements.txt
 node scripts/run-pipeline.mjs       # mérés minden telepített runtime-on + ábrák + build
 # vagy csak az ábrák újragenerálása, meglévő CSV-kből:
 python docs/benchmarks/generate_charts.py
-python docs/generate_diagrams.py
 ```
+
 
 
 A `clinic.js` eszközkészlettel (`clinic doctor -- node server.js`) vizuális
