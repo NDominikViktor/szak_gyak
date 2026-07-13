@@ -59,12 +59,12 @@ Egy mozgóablakos becslő (20 minta/ablak) megkeresi, hol stabilizálódik a
 mért idő (egymást követő ablak-átlagok közötti relatív változás 2% alá
 csökken), és az addig eltelt mintákat warm-up mintaként eldobja.
 
-**2. ábra** a ténylegesen eldobott minták arányát mutatja méretenként és
+**1. ábra** a ténylegesen eldobott minták arányát mutatja méretenként és
 futtatókörnyezetenként:
 
 ![Warm-up kiszűrési arány](../benchmarks/warmup-cutoff-chart.png)
 
-*2. ábra: a warm-up-becslő által eldobott minták aránya az összes
+*1. ábra: a warm-up-becslő által eldobott minták aránya az összes
 mintához képest.*
 
 | Üzenetméret | Node.js eldobva/össz | Deno eldobva/össz | Bun eldobva/össz |
@@ -90,19 +90,35 @@ megbízható warm-up-becsléshez.
     futtatható (pl. `node scripts/run-pipeline.mjs --big` = ötszörös
     iterációszám), így a nagy méretű (10 MB/100 MB) pontok is elég mintát
     kapnak ahhoz, hogy a mozgóablakos becslő stabilizációs pontot
-    találjon. Ez a finomítás a jelen dokumentáció lezárásáig még nem lett
-    újrafuttatva a mérési gépen — a következő munkamenet feladata.
+    találjon.
+
+A warm-up-becslő tényleges hatását egy konkrét mérési idősoron (a
+legkisebb, 100 B-os üzenetméreten) mutatja be a **2. ábra**: minden
+pont egy nyers mérési minta (iterációnkénti titkosítási idő), a
+függőleges vonal pedig a mozgóablakos becslő által talált cutoff-pont —
+jól látszik, hogy az első néhány tucat iteráció még jelentősen lassabb
+(JIT-bemelegedés), utána a mérés stabilizálódik:
+
+![Warm-up hatás szemléltetése](../benchmarks/warmup-illustration-chart.png)
+
+*2. ábra: nyers mérési idők iterációnként, a becsült warm-up-cutoff-fal
+jelölve. A `generate_charts.py` a `--raw-samples` kapcsolóval mentett
+nyers mintákból generálja, ld. [Ábrák és nyers mérési adatok
+reprodukálása](../benchmarks/perf-hooks-example.md).*
 
 ## 1. Titkosítási művelet ideje (AES-GCM), 100 B - 100 000 000 B, warm-up kiszűrve
 
-**1. ábra** a mért átlagos titkosítási időt mutatja, 95%-os
-konfidencia-intervallummal:
+**3. ábra** a mért átlagos titkosítási időt mutatja, 95%-os
+konfidencia-intervallummal és az illesztett lineáris regressziós
+modellel (ld. lentebb):
 
 ![AES-GCM titkosítási idő üzenetméret és futtatókörnyezet szerint](../benchmarks/encryption-chart-v3.png)
 
-*1. ábra: átlagos titkosítási idő üzenetméret és futtatókörnyezet
+*3. ábra: átlagos titkosítási idő üzenetméret és futtatókörnyezet
 szerint, logaritmikus skálán. A hibasáv 95%-os konfidencia-intervallumot
-jelöl (±1,96·szórás/√n), nem a nyers szórást.*
+jelöl (±1,96·szórás/√n), nem a nyers szórást. A szaggatott vonal a
+lineáris regressziós modell illesztése (ld. "Az üzenetméret és a
+titkosítási idő közötti összefüggés" szakasz).*
 
 | Üzenetméret | Node.js átlag (ms) | Deno átlag (ms) | Bun átlag (ms) |
 |---:|---:|---:|---:|
