@@ -20,23 +20,26 @@ flowchart TB
         B_WC <--> B_KS[("Kulcstároló (IndexedDB)")]
     end
 
+    A_WC <==>|"ciphertext küldéskor / esemény fogadáskor"| CONN
+    B_WC <==>|"ciphertext küldéskor / esemény fogadáskor"| CONN
+
     subgraph SZ["Szerver (Node.js)"]
         direction TB
         CONN["Kapcsolatkezelés (HTTP/WebSocket)"]
         ACC["Fiók- és session-kezelés"]
         RELAY["Üzenet-relay (csak ciphertext)"]
         POOL[["worker_threads pool"]]
-        CONN <-- "auth/session ellenőrzés + válasz" --> ACC
-        CONN <-- "ciphertext átadása + relay-eredmény" --> RELAY
-        RELAY -. "címzett aktív kapcsolatának lekérdezése" .-> ACC
-        RELAY -. "metaadat-validálás (párhuzamosítva)" .-> POOL
+        CONN <-->|"auth/session"| ACC
+        CONN <-->|"ciphertext + eredmény"| RELAY
+        RELAY -.->|"címzett lekérdezése"| ACC
+        RELAY -.->|"metaadat-validálás"| POOL
     end
 
-    A_WC == "ciphertext (AES-GCM), küldéskor" ==> CONN
-    CONN == "esemény (new-message/ack/sync), fogadáskor" ==> A_WC
-    B_WC == "ciphertext (AES-GCM), küldéskor" ==> CONN
-    CONN == "esemény (new-message/ack/sync), fogadáskor" ==> B_WC
+    KA ~~~ SZ
+    KB ~~~ SZ
 ```
+
+*(A `~~~` láthatatlan élek csak az elrendezést rögzítik — a kliensek felül, a szerver alul jelenjen meg —, vizuálisan nem jelennek meg.)*
 
 **<a id="1-abra"></a>1. ábra:** a tervezett rendszer komponensei és az
 adatfolyam iránya. A kapcsolódási pont mindkét kliens esetén konkrétan a
