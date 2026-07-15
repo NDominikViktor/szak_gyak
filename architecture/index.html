@@ -877,22 +877,24 @@ egymás mellett, tükrözve szerepelnek; a szerver csak közvetít köztük.</p>
         B_WC &lt;--&gt; B_KS[("Kulcstároló (IndexedDB)")]
     end
 
+    A_WC &lt;==&gt;|"ciphertext küldéskor / esemény fogadáskor"| CONN
+    B_WC &lt;==&gt;|"ciphertext küldéskor / esemény fogadáskor"| CONN
+
     subgraph SZ["Szerver (Node.js)"]
         direction TB
         CONN["Kapcsolatkezelés (HTTP/WebSocket)"]
         ACC["Fiók- és session-kezelés"]
         RELAY["Üzenet-relay (csak ciphertext)"]
         POOL[["worker_threads pool"]]
-        CONN &lt;-- "auth/session ellenőrzés + válasz" --&gt; ACC
-        CONN &lt;-- "ciphertext átadása + relay-eredmény" --&gt; RELAY
-        RELAY -. "címzett aktív kapcsolatának lekérdezése" .-&gt; ACC
-        RELAY -. "metaadat-validálás (párhuzamosítva)" .-&gt; POOL
+        CONN &lt;--&gt;|"auth/session"| ACC
+        CONN &lt;--&gt;|"ciphertext + eredmény"| RELAY
+        RELAY -.-&gt;|"címzett lekérdezése"| ACC
+        RELAY -.-&gt;|"metaadat-validálás"| POOL
     end
 
-    A_WC == "ciphertext (AES-GCM), küldéskor" ==&gt; CONN
-    CONN == "esemény (new-message/ack/sync), fogadáskor" ==&gt; A_WC
-    B_WC == "ciphertext (AES-GCM), küldéskor" ==&gt; CONN
-    CONN == "esemény (new-message/ack/sync), fogadáskor" ==&gt; B_WC</code></pre>
+    KA ~~~ SZ
+    KB ~~~ SZ</code></pre>
+<p><em>(A <code>~~~</code> láthatatlan élek csak az elrendezést rögzítik — a kliensek felül, a szerver alul jelenjen meg —, vizuálisan nem jelennek meg.)</em></p>
 <p><strong><a id="1-abra"></a>1. ábra:</strong> a tervezett rendszer komponensei és az
 adatfolyam iránya. A kapcsolódási pont mindkét kliens esetén konkrétan a
 <strong>WebCrypto API</strong> komponens — nem a kliens egésze —, mert csakis onnan
