@@ -45,6 +45,13 @@
 | 2026-07-13 | 18:30 | 19:30 | writing | 2. visszajelzési kör (3. üzenet) feldolgozása: architektúra- és protokoll-ábrák Mermaid diagramra cserélve (korábbi matplotlib-ábrák nyíl/kontraszt-hibái, szekvenciadiagram-igény miatt); pipeline adatfolyam-ábra hozzáadása |
 | 2026-07-13 | 19:30 | 19:50 | writing | Ábraszámozási hiba javítása node-deno-bun.md-ben (a warm-up chart fizikailag előbb szerepelt, mint a titkosítási chart, de "2. ábra" volt ráírva "1." helyett); warm-up-szemléltető ábra beillesztése |
 | 2026-07-13 | 19:50 | 20:05 | coding | Lineáris regressziós illesztés hozzáadása a titkosítási chart-hoz (`generate_charts.py`), a táblázatos becslés vizuális megerősítéseként |
+| 2026-07-15 | 18:30 | 19:00 | writing | 3. visszajelzési kör feldolgozása: architektúra-ábra pontosítása (kétirányú, címkézett belső nyilak; konkrét Relay-ACC útvonal), ábra/táblázat-hivatkozások számmal és anchor-linkkel |
+| 2026-07-15 | 19:00 | 19:20 | writing | Hibás esetek kezelésének hozzáadása mindkét protokollhoz (OMEMO: offline címzett, elfogyott PreKey, session-desync; Matrix: késői csatlakozás, eszköz-verifikáció, szerver-elérhetetlenség); mermaid init-fix próba a nyílhegy-láthatósághoz |
+| 2026-07-15 | 19:20 | 19:35 | coding | Automatikus szakasz-számozás (CSS counter, `docs/stylesheets/numbering.css`), fejezetcímek kézi számozásának eltávolítása |
+| 2026-07-15 | 19:35 | 19:50 | writing | Táblázatok számozása és linkelt hivatkozása (7 táblázat), pipeline-ábra megcímkézése |
+| 2026-07-15 | 19:50 | 20:20 | coding | Regressziós modell hibájának feltárása (OLS-t a legnagyobb méretű pont dominálta, Deno-nál negatív, fizikailag értelmetlen rezsi-becslést adva) és javítása relatív hibára súlyozott illesztéssel; kiugró-érték vs. tartós warm-up elemzés és eloszlás-vizsgáló ábra (`plot_distribution`) hozzáadása |
+| 2026-07-15 | 20:20 | 20:25 | writing | Racsni/Double Ratchet terminológia-magyarázat beillesztése magába a dokumentációba |
+| 2026-07-15 | 20:25 | 20:30 | writing | Munkanapló kiegészítése a mai munkamenettel |
 
 !!! note "Időbélyegek pontossága"
     A 2026-07-07 és 2026-07-08-i sorok a git commit-időbélyegek alapján lettek
