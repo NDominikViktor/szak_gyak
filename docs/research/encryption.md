@@ -135,7 +135,17 @@ lenne.
   lett a Signal-protokoll a gigacsevegők láthatatlan
   testőre](https://geekhost.hu/titok-a-zsebben-hogyan-lett-a-signal-protokoll-a-gigacsevegok-lathatatlan-testore/)
   (a cikk a mechanizmust úgy írja le, hogy a Double Ratchet folyamatosan
-  "csörlőzi", azaz előre forgatja a kulcsokat). Saját tervezésű
+  "csörlőzi", azaz előre forgatja a kulcsokat).
+
+    !!! info "A 'kulcs-racsnizás' terminológia eredete"
+        A "kulcs-racsnizás" kifejezés a saját tükörfordításunk az angol
+        *Double Ratchet* mechanizmusra, mivel szabványos magyar
+        szakkifejezés egyelőre nem létezik rá. A fent hivatkozott
+        geekhost.hu forrás egyébként a "csörlőzés" szót használja
+        ugyanerre a logikára — a két elnevezés ugyanazt a jelenséget
+        írja le, csak más magyarítással.
+
+  Saját tervezésű
   kriptográfiai algoritmus kitalálása helyett egy meglévő, auditált
   megoldásra érdemes építeni, mert az apró tervezési hibák
   kriptográfiában különösen nehezen vehetők észre, és súlyos biztonsági
