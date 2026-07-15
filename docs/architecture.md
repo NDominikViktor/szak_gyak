@@ -20,8 +20,8 @@ flowchart TB
         B_WC <--> B_KS[("Kulcstároló (IndexedDB)")]
     end
 
-    A_WC <==>|"ciphertext küldéskor / esemény fogadáskor"| CONN
-    B_WC <==>|"ciphertext küldéskor / esemény fogadáskor"| CONN
+    A_WC ==>|"ciphertext (küldés) / esemény (fogadás)"| CONN
+    B_WC ==>|"ciphertext (küldés) / esemény (fogadás)"| CONN
 
     subgraph SZ["Szerver (Node.js)"]
         direction TB
@@ -34,12 +34,13 @@ flowchart TB
         RELAY -.->|"címzett lekérdezése"| ACC
         RELAY -.->|"metaadat-validálás"| POOL
     end
-
-    KA ~~~ SZ
-    KB ~~~ SZ
 ```
 
-*(A `~~~` láthatatlan élek csak az elrendezést rögzítik — a kliensek felül, a szerver alul jelenjen meg —, vizuálisan nem jelennek meg.)*
+*(A nyíl vizuálisan egyirányúnak tűnik, de a kapcsolat ténylegesen
+kétirányú — ezt a felirat és a szöveges magyarázat jelzi. Az egyirányú
+él-jelölés a diagram elrendezését segíti: enélkül a Mermaid automatikus
+rendezője véletlenszerűen helyezte a szervert hol fölé, hol alá a
+klienseknek.)*
 
 **<a id="1-abra"></a>1. ábra:** a tervezett rendszer komponensei és az
 adatfolyam iránya. A kapcsolódási pont mindkét kliens esetén konkrétan a
@@ -86,7 +87,8 @@ egyirányú a nyíl).
 
 ## Üzenetküldés és -fogadás — eseménykezelés
 
-Az [1. ábra](#1-abra) nyilai szándékosan kétirányúak: a szerver-kliens
+Bár az [1. ábra](#1-abra) kliens-szerver nyilai vizuálisan (elrendezési
+okból) egyirányúak, a kapcsolat ténylegesen kétirányú: a szerver-kliens
 kapcsolat nem egyszerű kérés-válasz, hanem tartós (WebSocket) kapcsolat,
 amin mindkét irányban önállóan, aszinkron módon közlekednek üzenetek és
 esemény-jellegű üzenetek.
