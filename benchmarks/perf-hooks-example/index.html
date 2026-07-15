@@ -49,6 +49,8 @@
       
     
     
+      <link rel="stylesheet" href="../../stylesheets/numbering.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -735,15 +737,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-titkositasi-ido-merese-perf_hooks" class="md-nav__link">
+  <a href="#titkositasi-ido-merese-perf_hooks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Titkosítási idő mérése (perf_hooks)
+        Titkosítási idő mérése (perf_hooks)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Titkosítási idő mérése (perf_hooks)">
+    <nav class="md-nav" aria-label="Titkosítási idő mérése (perf_hooks)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -763,15 +765,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-http-szerver-terheleses-tesztje-autocannon" class="md-nav__link">
+  <a href="#http-szerver-terheleses-tesztje-autocannon" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. HTTP szerver terheléses tesztje (autocannon)
+        HTTP szerver terheléses tesztje (autocannon)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. HTTP szerver terheléses tesztje (autocannon)">
+    <nav class="md-nav" aria-label="HTTP szerver terheléses tesztje (autocannon)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -844,15 +846,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-titkositasi-ido-merese-perf_hooks" class="md-nav__link">
+  <a href="#titkositasi-ido-merese-perf_hooks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Titkosítási idő mérése (perf_hooks)
+        Titkosítási idő mérése (perf_hooks)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Titkosítási idő mérése (perf_hooks)">
+    <nav class="md-nav" aria-label="Titkosítási idő mérése (perf_hooks)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -872,15 +874,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-http-szerver-terheleses-tesztje-autocannon" class="md-nav__link">
+  <a href="#http-szerver-terheleses-tesztje-autocannon" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. HTTP szerver terheléses tesztje (autocannon)
+        HTTP szerver terheléses tesztje (autocannon)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. HTTP szerver terheléses tesztje (autocannon)">
+    <nav class="md-nav" aria-label="HTTP szerver terheléses tesztje (autocannon)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -931,7 +933,7 @@
 <p>Cél: a titkosítási réteg (E2EE) hatásának mérése a rendszer
 teljesítményére — üzenetméret és feldolgozási idő közötti összefüggés,
 valamint a szerver terhelhetősége.</p>
-<h2 id="1-titkositasi-ido-merese-perf_hooks">1. Titkosítási idő mérése (<code>perf_hooks</code>)<a class="headerlink" href="#1-titkositasi-ido-merese-perf_hooks" title="Permanent link">&para;</a></h2>
+<h2 id="titkositasi-ido-merese-perf_hooks">Titkosítási idő mérése (<code>perf_hooks</code>)<a class="headerlink" href="#titkositasi-ido-merese-perf_hooks" title="Permanent link">&para;</a></h2>
 <div class="highlight"><span class="filename">encrypt-benchmark.js</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">performance</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;node:perf_hooks&#39;</span><span class="p">);</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;node:crypto&#39;</span><span class="p">);</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -988,6 +990,8 @@ mindhárom futtatókörnyezetre (Node/Deno/Bun) elvégzett verzió a
 <a href="../../research/node-deno-bun/">Node.js vs. Deno vs. Bun</a> oldalon
 található.</p>
 </div>
+<p><strong><a id="1-tablazat"></a>1. táblázat:</strong> az első körös (kibővítés előtti)
+titkosítási mérés eredménye.</p>
 <table>
 <thead>
 <tr>
@@ -1027,7 +1031,7 @@ mérhetővé az adatmennyiség hatása. Tipikus chat-üzeneteknél (néhány
 száz byte) a titkosítás overhead-je elhanyagolható; nagyobb
 payloadoknál (pl. fájlküldés) viszont már számít.</p>
 </div>
-<h2 id="2-http-szerver-terheleses-tesztje-autocannon">2. HTTP szerver terheléses tesztje (<code>autocannon</code>)<a class="headerlink" href="#2-http-szerver-terheleses-tesztje-autocannon" title="Permanent link">&para;</a></h2>
+<h2 id="http-szerver-terheleses-tesztje-autocannon">HTTP szerver terheléses tesztje (<code>autocannon</code>)<a class="headerlink" href="#http-szerver-terheleses-tesztje-autocannon" title="Permanent link">&para;</a></h2>
 <div class="highlight"><span class="filename">server.js</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">http</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;node:http&#39;</span><span class="p">);</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">((</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
@@ -1056,6 +1060,8 @@ payloadoknál (pl. fájlküldés) viszont már számít.</p>
 </code></pre></div>
 <p>10 párhuzamos kapcsolattal, 10 másodpercig teszteli a szervert.</p>
 <h3 id="eredmeny-ket-egymast-koveto-futtatas">Eredmény (két egymást követő futtatás)<a class="headerlink" href="#eredmeny-ket-egymast-koveto-futtatas" title="Permanent link">&para;</a></h3>
+<p><strong><a id="2-tablazat"></a>2. táblázat:</strong> <code>autocannon</code> terheléses teszt,
+két egymást követő futtatás.</p>
 <table>
 <thead>
 <tr>
@@ -1115,9 +1121,10 @@ eredmények átlagolása szükséges.</p>
   <a href="../encrypt-benchmark-v3-pow2.mjs"><code>encrypt-benchmark-v3-pow2.mjs</code></a>) írják, a
   <code>--csv=&lt;útvonal&gt;</code> és <code>--raw-samples=&lt;útvonal&gt;</code> kapcsolókkal.</li>
 </ul>
-<p><strong>A teljes pipeline adatfolyama</strong> (mérés → CSV → ábra → dokumentum-build,
-<code>scripts/run-pipeline.mjs</code>):</p>
-<pre class="mermaid"><code>flowchart LR
+<p>Az <a href="#1-abra">1. ábra</a> mutatja a pipeline teljes adatfolyamát (mérés →
+CSV → ábra → dokumentum-build, <code>scripts/run-pipeline.mjs</code>):</p>
+<pre class="mermaid"><code>%%{init: {"theme": "default"}}%%
+flowchart LR
     subgraph Meres["Mérés (node/deno/bun)"]
         BM1["encrypt-benchmark-v2.mjs&lt;br/&gt;(decimális méretek)"]
         BM2["encrypt-benchmark-v3-pow2.mjs&lt;br/&gt;(2-hatvány méretek)"]
@@ -1134,6 +1141,7 @@ eredmények átlagolása szükséges.</p>
         PNG1["encryption-chart-v3.png"]
         PNG2["warmup-cutoff-chart.png"]
         PNG3["warmup-illustration-chart.png"]
+        PNG4["distribution-chart.png"]
     end
 
     MK["mkdocs build"] --&gt; SITE["site/ → gh-deploy → GitHub Pages"]
@@ -1147,9 +1155,14 @@ eredmények átlagolása szükséges.</p>
     GC --&gt; PNG1
     GC --&gt; PNG2
     GC --&gt; PNG3
+    GC --&gt; PNG4
     PNG1 --&gt; MK
     PNG2 --&gt; MK
-    PNG3 --&gt; MK</code></pre>
+    PNG3 --&gt; MK
+    PNG4 --&gt; MK</code></pre>
+<p><strong><a id="1-abra"></a>1. ábra:</strong> a mérés-ábra-dokumentum pipeline
+adatfolyama: melyik szkript milyen fájlt ír/olvas, és hogyan jut el a
+végeredmény a GitHub Pages-ig.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>node<span class="w"> </span>scripts/run-pipeline.mjs<span class="w">       </span><span class="c1"># mérés minden telepített runtime-on + ábrák + build</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># vagy csak az ábrák újragenerálása, meglévő CSV-kből:</span>
@@ -1158,7 +1171,8 @@ eredmények átlagolása szükséges.</p>
 <p>A <code>clinic.js</code> eszközkészlettel (<code>clinic doctor -- node server.js</code>) vizuális
 flame graph és event loop delay riport is készíthető, ami mélyebb
 betekintést ad a CPU-terhelés eloszlásába. Ez a jelen fázisban opcionális
-kiegészítés, a fő mérési eredmények (fenti két táblázat) már megvannak.</p>
+kiegészítés, a fő mérési eredmények (<a href="#1-tablazat">1. táblázat</a> és
+<a href="#2-tablazat">2. táblázat</a>) már megvannak.</p>
 
 
 
