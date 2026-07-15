@@ -104,12 +104,18 @@ def plot_encryption_chart():
             label=RUNTIME_LABELS[runtime], markersize=5,
         )
 
-        # lineáris regresszió (idő = a + b * méret), szaggatott vonallal
+        # súlyozott (relatív hibát minimalizáló) lineáris regresszió:
+        # idő = a + b*méret, az idő/méret = a/méret + b átalakításon
+        # keresztül illesztve, hogy a nagyságrendek egyenlő súlyt kapjanak
+        # (a közönséges OLS a legnagyobb méretű pont miatt torzítana,
+        # ld. "Az üzenetméret és a titkosítási idő közötti összefüggés")
         n_pts = len(sizes)
-        mean_x = sum(sizes) / n_pts
-        mean_y = sum(avgs) / n_pts
-        b = sum((x - mean_x) * (y - mean_y) for x, y in zip(sizes, avgs)) / sum((x - mean_x) ** 2 for x in sizes)
-        a = mean_y - b * mean_x
+        X = [1 / s for s in sizes]
+        Y = [t / s for s, t in zip(sizes, avgs)]
+        mean_x = sum(X) / n_pts
+        mean_y = sum(Y) / n_pts
+        a = sum((x - mean_x) * (y - mean_y) for x, y in zip(X, Y)) / sum((x - mean_x) ** 2 for x in X)
+        b = mean_y - a * mean_x
         fit_x = [min(sizes), max(sizes)]
         fit_y = [a + b * x for x in fit_x]
         ax.plot(fit_x, fit_y, "--", color=RUNTIME_COLORS[runtime], linewidth=1.2, alpha=0.7)
@@ -132,7 +138,7 @@ def plot_encryption_chart():
     ax.set_ylabel("Titkosítási idő (ms, log skála)")
     ax.set_title("AES-GCM titkosítási idő üzenetméret és futtatókörnyezet szerint")
     ax.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.6)
-    ax.legend(title="folytonos: mérés, szaggatott: lineáris illesztés")
+    ax.legend(title="folytonos: mérés, szaggatott: súlyozott lin. illesztés")
     fig.tight_layout()
     out = HERE / "encryption-chart-v3.png"
     fig.savefig(out)
@@ -235,9 +241,69 @@ def plot_warmup_illustration():
     print(f"Mentve: {out}")
 
 
+def plot_distribution():
+    """A mérési idők eloszlását szemlélteti (hisztogram + illesztett
+    normális sűrűségfüggvény) a trimmelt (warm-up utáni) mintákon, a
+    legkisebb üzenetméretre. Csak akkor fut, ha van nyers minta-export."""
+    raw_path = RESULTS / "latest-run-raw-samples.csv"
+    if not raw_path.exists():
+        print("Kihagyva: distribution-chart.png (nincs nyers minta-export)")
+        return
+
+    rows = read_csv(raw_path)
+    size = sorted({int(r["size_bytes"]) for r in rows})[0]
+    runtime = runtime_key(rows[0]["runtime"])
+    series = [r for r in rows if int(r["size_bytes"]) == size]
+    series.sort(key=lambda r: int(r["sample_index"]))
+    times = [float(r["time_ms"]) for r in series]
+
+    # ugyanaz a warm-up-cutoff logika, mint az illusztráció ábránál,
+    # hogy csak a trimmelt (stabilizálódás utáni) mintákat vizsgáljuk
+    window = 20
+    window_avgs = [
+        sum(times[i:i + window]) / window
+        for i in range(0, len(times) - len(times) % window, window)
+    ]
+    cutoff = 0
+    for i in range(1, len(window_avgs) - 1):
+        change = abs(window_avgs[i] - window_avgs[i - 1]) / window_avgs[i - 1]
+        if change < 0.02:
+            cutoff = i * window
+            break
+    trimmed = times[cutoff:]
+
+    n = len(trimmed)
+    mean = sum(trimmed) / n
+    variance = sum((t - mean) ** 2 for t in trimmed) / (n - 1)
+    stddev = variance ** 0.5
+
+    fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+    ax.hist(trimmed, bins=20, density=True, color="#5fa052", alpha=0.6, label="trimmelt minták")
+
+    # illesztett normális sűrűségfüggvény
+    xs = [mean - 4 * stddev + i * (8 * stddev / 200) for i in range(201)]
+    ys = [
+        (1 / (stddev * (2 * math.pi) ** 0.5)) * math.exp(-((x - mean) ** 2) / (2 * stddev ** 2))
+        for x in xs
+    ]
+    ax.plot(xs, ys, "-", color=ARROW_COLOR, linewidth=1.8,
+             label=f"illesztett normális (μ={mean:.3f}, σ={stddev:.3f})")
+
+    ax.set_xlabel("Titkosítási idő (ms)")
+    ax.set_ylabel("Sűrűség")
+    ax.set_title(f"Mérési idők eloszlása ({RUNTIME_LABELS[runtime]}, {size} byte, n={n}, warm-up nélkül)")
+    ax.legend()
+    fig.tight_layout()
+    out = HERE / "distribution-chart.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"Mentve: {out}")
+
+
 ARROW_COLOR = "#c0392b"
 
 if __name__ == "__main__":
     plot_encryption_chart()
     plot_warmup_chart()
     plot_warmup_illustration()
+    plot_distribution()

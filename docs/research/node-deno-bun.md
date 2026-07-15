@@ -14,6 +14,9 @@ csomagkezelést, a bundlert és a teszt-futtatót is.
 
 ## Mérési környezet
 
+**<a id="1-tablazat"></a>1. táblázat:** a mérésekhez használt hardver és
+szoftverkörnyezet.
+
 | Paraméter | Érték |
 |---|---|
 | CPU | 12th Gen Intel(R) Core(TM) i5-1235U (12 mag/szál) |
@@ -59,13 +62,16 @@ Egy mozgóablakos becslő (20 minta/ablak) megkeresi, hol stabilizálódik a
 mért idő (egymást követő ablak-átlagok közötti relatív változás 2% alá
 csökken), és az addig eltelt mintákat warm-up mintaként eldobja.
 
-**1. ábra** a ténylegesen eldobott minták arányát mutatja méretenként és
-futtatókörnyezetenként:
+Az [1. ábra](#1-abra) a ténylegesen eldobott minták arányát mutatja
+méretenként és futtatókörnyezetenként:
 
 ![Warm-up kiszűrési arány](../benchmarks/warmup-cutoff-chart.png)
 
-*1. ábra: a warm-up-becslő által eldobott minták aránya az összes
-mintához képest.*
+**<a id="1-abra"></a>*1. ábra:*** a warm-up-becslő által eldobott minták aránya az összes
+mintához képest.
+
+**<a id="2-tablazat"></a>2. táblázat:** a warm-up-becslő által eldobott
+minták száma és aránya méretenként és futtatókörnyezetenként.
 
 | Üzenetméret | Node.js eldobva/össz | Deno eldobva/össz | Bun eldobva/össz |
 |---:|---:|---:|---:|
@@ -93,32 +99,88 @@ megbízható warm-up-becsléshez.
     találjon.
 
 A warm-up-becslő tényleges hatását egy konkrét mérési idősoron (a
-legkisebb, 100 B-os üzenetméreten) mutatja be a **2. ábra**: minden
-pont egy nyers mérési minta (iterációnkénti titkosítási idő), a
+legkisebb, 100 B-os üzenetméreten) mutatja be a [2. ábra](#2-abra):
+minden pont egy nyers mérési minta (iterációnkénti titkosítási idő), a
 függőleges vonal pedig a mozgóablakos becslő által talált cutoff-pont —
 jól látszik, hogy az első néhány tucat iteráció még jelentősen lassabb
 (JIT-bemelegedés), utána a mérés stabilizálódik:
 
 ![Warm-up hatás szemléltetése](../benchmarks/warmup-illustration-chart.png)
 
-*2. ábra: nyers mérési idők iterációnként, a becsült warm-up-cutoff-fal
+**<a id="2-abra"></a>*2. ábra:*** nyers mérési idők iterációnként, a becsült warm-up-cutoff-fal
 jelölve. A `generate_charts.py` a `--raw-samples` kapcsolóval mentett
 nyers mintákból generálja, ld. [Ábrák és nyers mérési adatok
 reprodukálása](../benchmarks/perf-hooks-example.md).*
 
-## 1. Titkosítási művelet ideje (AES-GCM), 100 B - 100 000 000 B, warm-up kiszűrve
+### Kiugró (tüskeszerű) értékek vs. tartós warm-up-hatás
 
-**3. ábra** a mért átlagos titkosítási időt mutatja, 95%-os
-konfidencia-intervallummal és az illesztett lineáris regressziós
-modellel (ld. lentebb):
+A [2. ábra](#2-abra)-n jól látszik, hogy a warm-up-cutoff által jelzett
+"lassú" tartomány nem egyenletesen csökkenő idősor, hanem **néhány
+elszigetelt tüske** (pl. a 65-70. és 180. iteráció környékén), a többi
+korai minta már közel van a stabilizált szinthez. Ez felveti a kérdést:
+a jelenlegi (mozgóablak-alapú) módszer *tartós* JIT-bemelegedésre van
+optimalizálva, nem *elszórt kiugró* értékek kiszűrésére — a kettő más
+jelenség, más szűrést igényel:
+
+- **Mozgóablakos cutoff** (jelenlegi módszer): egy folytonos "eleje"
+  szakaszt vág le, azt feltételezve, hogy a lassulás egy összefüggő
+  bemelegedési szakasz. Jól kezeli a tartós JIT-hatást, de a szórtan
+  előforduló tüskéket (pl. egy véletlen GC-szünet a 65. iterációnál)
+  nem — azok, ha a cutoff-ponton túl esnek, benne maradnak a trimmelt
+  mintában is.
+- **Pontonkénti outlier-szűrés** (pl. IQR- vagy MAD-alapú): minden
+  egyes mintát a teljes eloszláshoz viszonyít, nem a pozíciójához. Ez
+  a tüskéket a sorban elfoglalt helyüktől függetlenül kiszűrné, de a
+  *tartós* bemelegedési szakasz elejét nem feltétlenül (hiszen azok a
+  minták nem feltétlenül "szélsőségesek" egyenként, csak együttesen
+  magasabb szintűek).
+
+A két módszer tehát **kiegészíti**, nem helyettesíti egymást. Hogy
+mennyivel változna a kihagyott iterációk száma egy IQR-alapú
+kiegészítő szűréssel, csak a nyers minták tényleges elemzésével
+mondható meg pontosan — ez a `--raw-samples` kapcsolóval mentett
+adatokon már elvégezhető, de a mostani mérésben ezt még nem futtattuk
+le szisztematikusan minden méretre és futtatókörnyezetre; ez a
+következő munkamenet feladata.
+
+### A mérési idők eloszlása
+
+A 95%-os konfidencia-intervallum számítása (ld. fentebb) implicit
+feltételezi, hogy a mérési idők (közelítőleg) normális eloszlásúak.
+Ez az iterációszám mellett (n ≥ 15) a centrális határeloszlás-tétel
+miatt az *átlagra* nézve elfogadható közelítés még akkor is, ha az
+*egyedi mérések* eloszlása nem az — de érdemes ezt nem csak
+feltételezni, hanem meg is nézni:
+
+![Mérési idők eloszlása](../benchmarks/distribution-chart.png)
+
+**<a id="3-abra"></a>*3. ábra:*** a legkisebb üzenetméretnél (100 B)
+mért idők hisztogramja és az illesztett normális sűrűségfüggvény. Jól
+látszik, hogy az egyedi mérések eloszlása **nem normális, hanem erősen
+jobbra ferde** (a minták túlnyomó többsége egy szűk sáv körül
+csoportosul, de van néhány, a fő tömegtől messze eső, ritka kiugró
+érték — feltehetően GC-szünetek vagy OS-szintű ütemezési
+késleltetések miatt). Ez alátámasztja a fenti "Kiugró (tüskeszerű)
+értékek" szakaszban leírt megfigyelést: a warm-up-jelenség és a
+szórtan előforduló kiugró értékek két különböző hatás, és a normális
+eloszlás csak az *átlagra*, nem az *egyedi mérésekre* jó közelítés.
+
+## Titkosítási művelet ideje (AES-GCM), 100 B - 100 000 000 B, warm-up kiszűrve
+
+A [4. ábra](#4-abra) a mért átlagos titkosítási időt mutatja, 95%-os
+konfidencia-intervallummal és az illesztett, súlyozott lineáris
+regressziós modellel (ld. lentebb):
 
 ![AES-GCM titkosítási idő üzenetméret és futtatókörnyezet szerint](../benchmarks/encryption-chart-v3.png)
 
-*3. ábra: átlagos titkosítási idő üzenetméret és futtatókörnyezet
+**<a id="4-abra"></a>*4. ábra:*** átlagos titkosítási idő üzenetméret és futtatókörnyezet
 szerint, logaritmikus skálán. A hibasáv 95%-os konfidencia-intervallumot
 jelöl (±1,96·szórás/√n), nem a nyers szórást. A szaggatott vonal a
 lineáris regressziós modell illesztése (ld. "Az üzenetméret és a
 titkosítási idő közötti összefüggés" szakasz).*
+
+**<a id="3-tablazat"></a>3. táblázat:** átlagos titkosítási idő
+üzenetméret és futtatókörnyezet szerint (a [4. ábra](#4-abra) alapja).
 
 | Üzenetméret | Node.js átlag (ms) | Deno átlag (ms) | Bun átlag (ms) |
 |---:|---:|---:|---:|
@@ -142,23 +204,73 @@ titkosítási idő közötti összefüggés" szakasz).*
 
 ### Az üzenetméret és a titkosítási idő közötti összefüggés
 
-Lineáris regressziót illesztve (`idő = a + b · méret`) mindhárom
-futtatókörnyezet adataira:
+A titkosítás fizikai modellje egy fix, méretfüggetlen rezsiből (`a` —
+kulcskezelés, API-hívás overhead) és egy, az adatmennyiséggel arányos
+komponensből (`b` — a tényleges titkosítási munka) áll össze: **idő =
+a + b · méret**. A modell szerkezete tehát helyes, a kérdés az, hogyan
+illesszük.
 
-| Runtime | Modell | R² | Becsült áteresztőképesség |
+**Első próbálkozásként közönséges legkisebb négyzetek (OLS) módszerrel**
+illesztve mindhárom futtatókörnyezet adataira:
+
+**<a id="4-tablazat"></a>4. táblázat:** első próbálkozás, közönséges
+legkisebb négyzetek (OLS) módszerrel illesztve.
+
+| Runtime | Modell (OLS) | R² |
+|---|---|---:|
+| Node.js | idő(ms) = 0,468 + 0,0000013 × méret(byte) | 0,99986 |
+| Deno | idő(ms) = **-0,263** + 0,0000053 × méret(byte) | 0,99990 |
+| Bun | idő(ms) = 0,833 + 0,0000009 × méret(byte) | 0,99789 |
+
+Ez a magas R² **megtévesztő**: a mérési méretek 100 B-tól 100 MB-ig 6
+nagyságrendet ölelnek fel, és a közönséges OLS a **abszolút** hibák
+négyzetösszegét minimalizálja — ezt a legnagyobb (100 MB-os) pont
+dominálja, ezért a modell ott illeszkedik jól, cserébe kis méreteknél
+teljesen hibás: a Node.js-nél 100 B-nál a modell 0,468 ms-t jósol, a
+mért érték viszont 0,142 ms (3,3×-os eltérés); a Deno-nál pedig a
+becsült rezsi **negatív** (-0,263 ms) — ami fizikailag értelmetlen,
+hiszen egy művelet ideje nem lehet negatív. Ez pontosan azt jelzi, amire
+a konzulensi visszajelzés rákérdezett: ez a modell "ilyen formában még
+nem az igazi".
+
+**Javítás: relatív hiba szerint súlyozott illesztés.** Az `idő = a +
+b·méret` egyenletet a mérettel elosztva `idő/méret = a/méret + b`
+alakra hozva, majd az `Y = idő/méret`, `X = 1/méret` transzformált
+változókra közönséges lineáris regressziót futtatva a nagyságrendek
+egyenlő súlyt kapnak (nem az abszolút, hanem a relatív hiba
+minimalizálódik):
+
+**<a id="5-tablazat"></a>5. táblázat:** javított, relatív hibára
+súlyozott illesztés.
+
+| Runtime | Modell (súlyozott) | R² (kis-közepes méreteken) | Becsült áteresztőképesség |
 |---|---|---:|---:|
-| Node.js | idő(ms) = 0,468 + 0,0000013 × méret(byte) | 0,99986 | ≈ 755 MB/s |
-| Deno | idő(ms) = -0,263 + 0,0000053 × méret(byte) | 0,99990 | ≈ 190 MB/s |
-| Bun | idő(ms) = 0,833 + 0,0000009 × méret(byte) | 0,99789 | ≈ 1119 MB/s |
+| Node.js | idő(ms) = 0,142 + 0,0000007 × méret(byte) | 0,999 (≤1 MB) | ≈ 1429 MB/s |
+| Deno | idő(ms) = 0,115 + 0,0000062 × méret(byte) | 0,998 (≤1 MB) | ≈ 161 MB/s |
+| Bun | idő(ms) = 0,090 + 0,0000012 × méret(byte) | 0,999 (≤1 MB) | ≈ 847 MB/s |
 
-**Ugyanaz a lineáris modell mindhárom futtatókörnyezetre kiválóan
-illeszkedik** (R² > 0,997) — ez megfelel annak, amit egy blokk-titkosítótól
-elvárunk: az idő egy fix rezsiből (`a` — kulcskezelés, API-hívás
-overhead) és egy, az adatmennyiséggel arányos komponensből (`b` — a
-tényleges titkosítási munka) áll össze. A `b` együttható reciproka adja
-a becsült áteresztőképességet: eszerint a **Bun a leggyorsabb**
-(≈1,1 GB/s), a **Node.js** középen (≈755 MB/s), a **Deno** pedig
-jelentősen lassabb (≈190 MB/s) nagy adatmennyiségeknél.
+Ez a modell kis-közepes méreteknél (100 B - 1 MB) szinte tökéletesen
+illeszkedik (a becsült rezsi immár pozitív és realisztikus, kb.
+megegyezik a legkisebb üzenetméretnél mért idővel), viszont a
+legnagyobb (10-100 MB) méreteknél alulbecsül — ott ugyanis már nem a
+fix rezsi, hanem egy másik hatás (pl. gyorsítótár-kihasználtság
+romlása nagy pufferméretnél) dominál, amit egy egyszerű kétparaméteres
+lineáris modell nem tud visszaadni egyszerre mindkét skálán. **A két
+modell tehát más-más tartományban releváns**: a súlyozott modell a
+kis üzenetek (a chat-alkalmazás tipikus esete) viselkedését írja le
+pontosan, az OLS-modell nagy adatmennyiségek aszimptotikus
+áteresztőképességét közelíti jobban. A titkosítási chart-on (lentebb)
+mostantól a súlyozott modell szaggatott vonala szerepel, mert a
+tervezett alkalmazás tipikus üzenetmérete kicsi.
+
+Fontos: a súlyozott modell `b` együtthatójának reciproka **nem**
+azonos a nagy fájlokra vonatkozó tényleges áteresztőképességgel — az a
+kis-közepes méretek tartományára jellemző. A **nagy adatmennyiségekre
+vonatkozó rangsor** (Bun a leggyorsabb ≈1,1 GB/s, Node.js középen
+≈755 MB/s, Deno lassabb ≈190 MB/s) továbbra is a nyers mérési
+pontokból, közvetlenül a legnagyobb (100 MB-os) méretnél mért időből
+olvasható ki legmegbízhatóbban ([4. ábra](#4-abra) fenti pontja),
+nem egy globálisan illesztett modellből.
 
 ### Statisztikai ellenőrzés: Node vs. Bun, 1 MB, trimmelt adatokon
 
@@ -189,7 +301,10 @@ A különbség erősen statisztikailag szignifikáns.
     megbízhatóbb lenne. Ez a nyers minták mentése után egy jövőbeli
     finomítási lépés lehet.
 
-## 2. HTTP terheléses teszt — natív API-k vs. `node:http` kompatibilitási réteg
+## HTTP terheléses teszt — natív API-k vs. `node:http` kompatibilitási réteg
+
+**<a id="6-tablazat"></a>6. táblázat:** HTTP terheléses teszt, natív
+API-k vs. `node:http` kompatibilitási réteg.
 
 | Runtime | API | Átlagos req/mp | Átlagos latency | p97.5 latency |
 |---|---|---:|---:|---:|
@@ -212,6 +327,9 @@ finomításaként egy második mérési sorozatot is elvégeztünk pontos
 kettő-hatvány méretekkel (128 B, 1 KiB, 8 KiB, 64 KiB, 1 MiB, 8 MiB,
 64 MiB), ugyanazzal a szkripttel és módszertannal
 (`encrypt-benchmark-v3-pow2.mjs`), ugyanazon a gépen:
+
+**<a id="7-tablazat"></a>7. táblázat:** kettes-hatvány alapú méretek,
+trimmelt átlagos titkosítási idő.
 
 | Méret | Node.js trimmelt avg (ms) | Deno trimmelt avg (ms) | Bun trimmelt avg (ms) |
 |---|---:|---:|---:|
