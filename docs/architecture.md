@@ -1,6 +1,6 @@
 # Rendszerarchitektúra — áttekintés
 
-Az alábbi ábra a tervezett üzenetküldő rendszer nagy vonalakban vett
+Az [1. ábra](#1-abra) a tervezett üzenetküldő rendszer nagy vonalakban vett
 felépítését mutatja: két, egymással egyenrangú kliens (böngészőben futó
 HTML/JS alkalmazás) és egy közöttük/alattuk elhelyezkedő Node.js szerver.
 A két kliens között nincs alá-fölé rendeltségi viszony, ezért az ábrán
@@ -24,25 +24,34 @@ flowchart TB
         direction TB
         CONN["Kapcsolatkezelés (HTTP/WebSocket)"]
         ACC["Fiók- és session-kezelés"]
-        RELAY["Üzenet-relay (csak ciphertext, 'vakon' továbbít)"]
+        RELAY["Üzenet-relay (csak ciphertext)"]
         POOL[["worker_threads pool"]]
-        CONN --> ACC
-        CONN --> RELAY
-        RELAY -. párhuzamosított feldolgozás .-> POOL
+        CONN <-- "auth/session ellenőrzés + válasz" --> ACC
+        CONN <-- "ciphertext átadása + relay-eredmény" --> RELAY
+        RELAY -. "címzett aktív kapcsolatának lekérdezése" .-> ACC
+        RELAY -. "metaadat-validálás (párhuzamosítva)" .-> POOL
     end
 
-    A_WC -- "ciphertext (AES-GCM) + esemény" --> CONN
-    CONN -- "esemény (new-message/ack/sync)" --> A_WC
-    B_WC -- "ciphertext (AES-GCM) + esemény" --> CONN
-    CONN -- "esemény (new-message/ack/sync)" --> B_WC
+    A_WC == "ciphertext (AES-GCM), küldéskor" ==> CONN
+    CONN == "esemény (new-message/ack/sync), fogadáskor" ==> A_WC
+    B_WC == "ciphertext (AES-GCM), küldéskor" ==> CONN
+    CONN == "esemény (new-message/ack/sync), fogadáskor" ==> B_WC
 ```
 
-**1. ábra:** a tervezett rendszer komponensei és az adatfolyam iránya. A
-kapcsolódási pont mindkét kliens esetén konkrétan a **WebCrypto API**
-komponens — nem a kliens egésze —, mert csakis onnan hagyhatja el
-ciphertext formájában az üzenet a böngészőt, és csak oda érkezhet vissza
-dekódolásra. A szerver oldalán a **Kapcsolatkezelés** a belépési pont,
-ami a Fiók- és session-kezelés, illetve az Üzenet-relay felé ágazik szét.
+**<a id="1-abra"></a>1. ábra:** a tervezett rendszer komponensei és az
+adatfolyam iránya. A kapcsolódási pont mindkét kliens esetén konkrétan a
+**WebCrypto API** komponens — nem a kliens egésze —, mert csakis onnan
+hagyhatja el ciphertext formájában az üzenet a böngészőt, és csak oda
+érkezhet vissza dekódolásra. A vastag nyilak (kliens ↔ szerver) mindig a
+**Kapcsolatkezelés** komponensnél végződnek — ez az egyetlen belépési
+pont. A szerveren belüli vékony nyilak **kétirányúak és címkézettek**:
+a Kapcsolatkezelés a Fiók- és session-kezeléstől auth-választ kap, az
+Üzenet-relay-től pedig a továbbítás eredményét. A szaggatott nyilak
+egyirányú **lekérdezések**: a Relay az ACC-től kérdezi le, melyik
+kapcsolaton aktív a címzett, a metaadat-validálást pedig párhuzamosítva
+a worker pool-nak adja át (ezekre nem érkezik önálló válasz-üzenet, az
+eredmény a hívó függvény visszatérési értékeként érkezik vissza, ezért
+egyirányú a nyíl).
 
 ## A komponensek szerepe
 
@@ -74,9 +83,9 @@ ami a Fiók- és session-kezelés, illetve az Üzenet-relay felé ágazik szét.
 
 ## Üzenetküldés és -fogadás — eseménykezelés
 
-Az **1. ábra** nyilai szándékosan kétirányúak: a szerver-kliens kapcsolat
-nem egyszerű kérés-válasz, hanem tartós (WebSocket) kapcsolat, amin
-mindkét irányban önállóan, aszinkron módon közlekednek üzenetek és
+Az [1. ábra](#1-abra) nyilai szándékosan kétirányúak: a szerver-kliens
+kapcsolat nem egyszerű kérés-válasz, hanem tartós (WebSocket) kapcsolat,
+amin mindkét irányban önállóan, aszinkron módon közlekednek üzenetek és
 esemény-jellegű üzenetek.
 
 **Küldés (kliens → szerver → címzett kliens):**
