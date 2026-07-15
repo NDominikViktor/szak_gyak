@@ -1,0 +1,45 @@
+/* Automatikus szakasz-számozás (fejezet.szakasz.alszakasz), oldalanként.
+ * Nem igényel MkDocs plugint: a böngésző CSS counter mechanizmusát
+ * használja, ezért csak a renderelt oldalon jelenik meg, a Markdown
+ * forrásban nem kell duplán karbantartani a számokat.
+ *
+ * Az oldal címe (H1, a fájl első #-je) és az admonition-dobozok (tip,
+ * warning, note) belső címei nincsenek beleszámozva - utóbbiakhoz a
+ * :not() szelektor zárja ki az .admonition-title-t.
+ */
+
+.md-content article {
+  counter-reset: h2counter;
+}
+
+.md-content article h2:not(.admonition-title) {
+  counter-reset: h3counter;
+  counter-increment: h2counter;
+}
+
+.md-content article h2:not(.admonition-title)::before {
+  content: counter(h2counter) ". ";
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-content article h3:not(.admonition-title) {
+  counter-reset: h4counter;
+  counter-increment: h3counter;
+}
+
+.md-content article h3:not(.admonition-title)::before {
+  content: counter(h2counter) "." counter(h3counter) ". ";
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-content article h4:not(.admonition-title) {
+  counter-increment: h4counter;
+}
+
+.md-content article h4:not(.admonition-title)::before {
+  content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) ". ";
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+}
