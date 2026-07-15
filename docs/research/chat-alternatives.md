@@ -47,11 +47,12 @@ teljesen szabványos maradhat úgy is, hogy sosem támogatja az OMEMO-t.
 Népszerű szerver-implementációk: [Prosody](https://prosody.im/),
 [ejabberd](https://www.ejabberd.im/).
 
-Az alábbi szekvenciadiagram a fent leírt lépéseket foglalja össze, a
+Az [1. ábra](#1-abra) a fent leírt lépéseket foglalja össze, a
 visszaigazolásokkal (ack/receipt) együtt — a valóságban ez sem
 egyirányú: a szerver és a felek is nyugtázzák az egyes lépéseket:
 
 ```mermaid
+%%{init: {"theme": "default"}}%%
 sequenceDiagram
     participant K as Küldő kliens
     participant Sz as XMPP szerver (PubSub/PEP)
@@ -69,9 +70,33 @@ sequenceDiagram
     Note over K,C: 5. Minden további üzenetnél új ratchet-lépés<br/>(forward secrecy: régi kulcs nem fejt vissza újat)
 ```
 
-**1. ábra:** OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
+**<a id="1-abra"></a>1. ábra:** OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
 publikálásától az első titkosított üzenetig, a szerver és a felek
-visszaigazolásaival együtt.
+visszaigazolásaival együtt. (Ez az **optimista eset** — a hibás
+esetekre lentebb.)
+
+!!! warning "Hibás esetek kezelése"
+    Az [1. ábra](#1-abra) a protokoll szabály szerinti, hibamentes lefutását
+    mutatja. A gyakorlatban legalább három hibaosztályt kell kezelni:
+
+    - **A címzett offline, nincs aktív kapcsolata.** A szerver ilyenkor
+      nem tud azonnal `delivery receipt`-et adni — az XMPP szerver a
+      stanza-t eltárolja (offline message storage), és a címzett
+      következő bejelentkezésekor kézbesíti. A küldő oldalán emiatt a
+      "megérkezett" állapot csak a receipt tényleges megérkezésekor áll
+      be, nem a küldés pillanatában.
+    - **Elfogyott az egyszeri PreKey-kollekció.** Ha a bundle-ben nem
+      maradt felhasználható PreKey, az X3DH kulcscsere nem tud lezajlani
+      "perfect forward secrecy" móddal — a kliensnek ilyenkor vagy meg
+      kell várnia, amíg a címzett frissíti a bundle-jét (ez a felelőssége
+      a kliensnek, alacsony PreKey-szám esetén automatikusan újratölteni
+      a listát), vagy a bundle csak az aláírt PreKey-t használja fel
+      (gyengébb garanciával).
+    - **Session-desync** (pl. a kliens törölte/elvesztette a helyi
+      ratchet-állapotot, de a másik fél még a régi állapottal
+      titkosít). Ilyenkor a dekódolás hibával tér vissza; a gyakorlatban
+      ez egy explicit "session invalid" jelzést vált ki, ami egy új X3DH
+      kulcscserét indít el (2-4. lépés megismétlése).
 
 ### Matrix
 
@@ -102,11 +127,12 @@ nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. [Conduit](https://conduit.rs/)) ezen próbálnak javítani.
 
-Az alábbi szekvenciadiagram a Megolm session-kulcs terjesztésének és a
+A [2. ábra](#2-abra) a Megolm session-kulcs terjesztésének és a
 csoportos titkosításnak a folyamatát mutatja, a szoba többi tagjának
 visszaigazolásaival együtt:
 
 ```mermaid
+%%{init: {"theme": "default"}}%%
 sequenceDiagram
     participant K as Küldő kliens
     participant Sz as Home szerver (esemény-DAG)
@@ -126,10 +152,33 @@ sequenceDiagram
     Sz-->>K: receipt továbbítása
 ```
 
-**2. ábra:** Matrix (Olm/Megolm) — csoportos üzenetküldés folyamata.
-Jól látszik a különbség az OMEMO-hoz (1. ábra) képest: ott minden
-üzenethez páronkénti ratchet-lépés történik, itt egy szobánkénti közös
-racsni-kulcsot osztanak meg egyszer, Olm-mal titkosítva.
+**<a id="2-abra"></a>2. ábra:** Matrix (Olm/Megolm) — csoportos
+üzenetküldés folyamata (optimista eset). Jól látszik a különbség az
+OMEMO-hoz ([1. ábra](#1-abra)) képest: ott minden üzenethez páronkénti
+ratchet-lépés történik, itt egy szobánkénti közös racsni-kulcsot
+osztanak meg egyszer, Olm-mal titkosítva.
+
+!!! warning "Hibás esetek kezelése"
+    - **Új tag csatlakozik a szobához, miután már folyt a beszélgetés.**
+      Az új tag nem kapja meg visszamenőleg a régi Megolm-kulcsot
+      (ez tudatos tervezési döntés, ld. "előre-forgatható racsni" a
+      szöveg elején) — a korábbi üzeneteket csak akkor tudja
+      visszafejteni, ha valamelyik meglévő tag explicit megosztja vele
+      a "key export"-ot. Ez a Matrix egyik ismert korlátja: nincs
+      automatikus "history sharing" alapértelmezésben.
+    - **Eszköz-verifikáció sikertelen** (a küldő nem tudja megbízhatóan
+      azonosítani a címzett eszközét). A kliens ilyenkor "unverified
+      device" figyelmeztetést jelenít meg, de a Matrix — biztonság
+      helyett elérhetőséget priorizálva — alapból **mégis elküldi** az
+      üzenetet, csak jelzi a bizonytalanságot; ez explicit
+      felhasználói döntés kérdése, nem protokollhiba.
+    - **A home szerver ideiglenesen elérhetetlen.** Mivel az
+      esemény-DAG elosztott (több home szerver replikálja), a küldő
+      kliens a helyi (saját) szerverére küldi az eseményt, ami
+      pufferolja és később, a kapcsolat helyreállásakor szinkronizálja
+      a többi szerverrel (federation retry) — ez a Matrix föderált
+      architektúrájának közvetlen következménye, az OMEMO-nál nincs
+      ilyen többszintű újrapróbálkozási mechanizmus.
 
 ### Signal
 
