@@ -301,9 +301,19 @@ def _plot_distribution_for_size(rows, size, out_name):
 def plot_distribution():
     """A mérési idők eloszlását szemlélteti (hisztogram + illesztett
     normális sűrűségfüggvény) a trimmelt (warm-up utáni) mintákon - a
-    legkisebb ÉS a legnagyobb üzenetméretre is (utóbbinál, ahol az idő
-    már messze van a 0-tól, jellegzetesebben elválna egy log-normális/
-    Gamma-eloszlástól a normális, ha az a helyesebb modell).
+    legkisebb méretre, valamint egy "nagy, de még kellő mintaszámú"
+    méretre is (utóbbinál, ahol az idő már messze van a 0-tól,
+    jellegzetesebben elválna egy log-normális/Gamma-eloszlástól a
+    normális, ha az a helyesebb modell).
+
+    Fontos: a *legnagyobb byte-méretű* mérési pont NEM feltétlenül a
+    legjobb választás ehhez, mert a benchmark szkript a nagy méreteknél
+    szándékosan kevesebb iterációt futtat (ld. `iterationsFor()`) - a
+    100 MB-os pontnál pl. csak n=15 minta van, ami egy hisztogramhoz
+    kevés. Ehelyett azt a méretet választjuk, ami a nagyobbik felében
+    van a mérettartománynak, ÉS a legtöbb (trimmelt) mintával
+    rendelkezik közülük.
+
     Csak akkor fut, ha van nyers minta-export."""
     raw_path = RESULTS / "latest-run-raw-samples.csv"
     if not raw_path.exists():
@@ -313,8 +323,15 @@ def plot_distribution():
     rows = read_csv(raw_path)
     sizes = sorted({int(r["size_bytes"]) for r in rows})
     _plot_distribution_for_size(rows, sizes[0], "distribution-chart.png")
+
     if len(sizes) > 1:
-        _plot_distribution_for_size(rows, sizes[-1], "distribution-chart-large.png")
+        upper_half = sizes[len(sizes) // 2:]
+        counts = {s: sum(1 for r in rows if int(r["size_bytes"]) == s) for s in upper_half}
+        # az "elég sok mintával rendelkező" méretek közül a legnagyobbat
+        # választjuk, hogy az idő is minél messzebb essen a 0-tól
+        well_sampled = [s for s in upper_half if counts[s] >= 100]
+        large_size = max(well_sampled) if well_sampled else max(upper_half, key=lambda s: counts[s])
+        _plot_distribution_for_size(rows, large_size, "distribution-chart-large.png")
 
 
 ARROW_COLOR = "#c0392b"
