@@ -52,6 +52,12 @@
 | 2026-07-15 | 19:50 | 20:20 | coding | Regressziós modell hibájának feltárása (OLS-t a legnagyobb méretű pont dominálta, Deno-nál negatív, fizikailag értelmetlen rezsi-becslést adva) és javítása relatív hibára súlyozott illesztéssel; kiugró-érték vs. tartós warm-up elemzés és eloszlás-vizsgáló ábra (`plot_distribution`) hozzáadása |
 | 2026-07-15 | 20:20 | 20:25 | writing | Racsni/Double Ratchet terminológia-magyarázat beillesztése magába a dokumentációba |
 | 2026-07-15 | 20:25 | 20:30 | writing | Munkanapló kiegészítése a mai munkamenettel |
+| 2026-07-17 | 21:00 | 21:30 | writing | 4. visszajelzési kör: architektúra-ábra javítása (a szerver-kliens kapcsolatot okozó ciklus miatti elrendezési/felirat-hiba megszüntetése, kliens oldali "Kapcsolattartás" komponens explicit megnevezése, külön részletes kliens-ábra) |
+| 2026-07-17 | 21:30 | 21:50 | coding | Mermaid szekvenciadiagramok kontraszthibájának javítása explicit témaváltozókkal (a sötét oldal-témán az alap Mermaid nyílszín nem volt eléggé látható) |
+| 2026-07-17 | 21:50 | 22:10 | writing | Hibás esetek folyamatábrás (nem csak szekvenciadiagramos) ábrázolása az OMEMO protokollnál, formális protokoll-verifikáció megjegyzése |
+| 2026-07-17 | 22:10 | 22:40 | coding | Regressziós illesztés ábrázolási hibájának javítása (a szaggatott vonal az érvényességi tartományra korlátozva), becsült-vs-mért összevető táblázat, kitevős együttható-formázás skalárszorzat-ponttal |
+| 2026-07-17 | 22:40 | 23:00 | writing | Eloszlás-vizsgálat kiegészítése nagyobb üzenetméretre, log-normális eloszlás mint alternatív modell megvitatása, háttérfolyamatok hatásának megjegyzése a kiugró értékeknél |
+| 2026-07-17 | 23:00 | 23:10 | writing | Ábrafeliratok általános rövidítése (részletek a törzsszövegbe mozgatva), munkanapló frissítése |
 
 !!! note "Időbélyegek pontossága"
     A 2026-07-07 és 2026-07-08-i sorok a git commit-időbélyegek alapján lettek
