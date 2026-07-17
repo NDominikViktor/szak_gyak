@@ -12,16 +12,18 @@ flowchart TB
         direction TB
         A_UI["UI"] <--> A_WC["WebCrypto API"]
         A_WC <--> A_KS[("Kulcstároló (IndexedDB)")]
+        A_WC <--> A_NET["Kapcsolattartás (WebSocket kliens)"]
     end
 
     subgraph KB["Kliens B (böngésző)"]
         direction TB
         B_UI["UI"] <--> B_WC["WebCrypto API"]
         B_WC <--> B_KS[("Kulcstároló (IndexedDB)")]
+        B_WC <--> B_NET["Kapcsolattartás (WebSocket kliens)"]
     end
 
-    A_WC ==>|"ciphertext (küldés) / esemény (fogadás)"| CONN
-    B_WC ==>|"ciphertext (küldés) / esemény (fogadás)"| CONN
+    A_NET ==>|"ciphertext (küldés) / esemény (fogadás)"| CONN
+    B_NET ==>|"ciphertext (küldés) / esemény (fogadás)"| CONN
 
     subgraph SZ["Szerver (Node.js)"]
         direction TB
@@ -43,19 +45,42 @@ rendezője véletlenszerűen helyezte a szervert hol fölé, hol alá a
 klienseknek.)*
 
 **<a id="1-abra"></a>1. ábra:** a tervezett rendszer komponensei és az
-adatfolyam iránya. A kapcsolódási pont mindkét kliens esetén konkrétan a
-**WebCrypto API** komponens — nem a kliens egésze —, mert csakis onnan
-hagyhatja el ciphertext formájában az üzenet a böngészőt, és csak oda
-érkezhet vissza dekódolásra. A vastag nyilak (kliens ↔ szerver) mindig a
+adatfolyam iránya.
+
+A kliens oldalon a kapcsolattartásért kifejezetten a **Kapcsolattartás
+(WebSocket kliens)** komponens felel — ez tartja a tartós kapcsolatot a
+szerverrel, és ez ad át/vesz át ciphertext-et a WebCrypto API-tól. A
+WebCrypto API tehát csak titkosít/dekódol, magát a hálózati kapcsolatot
+nem kezeli — ezt korábban a diagram nem különítette el, ami
+félreérthető volt. A szerver oldalán a **Kapcsolatkezelés** tölti be
+ugyanezt a szerepet.
+
+A [2. ábra](#2-abra) egy kliens felépítését mutatja részletesebben,
+hogy ez a négy komponens és a köztük futó adat jobban kivehető legyen
+a fő ábra túlzsúfolása nélkül:
+
+```mermaid
+flowchart LR
+    UI["UI<br/>(nyers üzenet)"] -->|"nyers szöveg"| WC["WebCrypto API<br/>(titkosítás/dekódolás)"]
+    WC -->|"nyers szöveg"| UI
+    WC <-->|"kulcs lekérése/tárolása"| KS[("Kulcstároló<br/>(IndexedDB)")]
+    WC -->|"ciphertext"| NET["Kapcsolattartás<br/>(WebSocket kliens)"]
+    NET -->|"esemény (ciphertext)"| WC
+    NET <-->|"tartós WS-kapcsolat"| SRV(["Szerver"])
+```
+
+**<a id="2-abra"></a>2. ábra:** egy kliens (böngésző) belső felépítése
+részletesen.
+
+A [1. ábra](#1-abra)-n a vastag nyilak (kliens ↔ szerver) mindig a
 **Kapcsolatkezelés** komponensnél végződnek — ez az egyetlen belépési
-pont. A szerveren belüli vékony nyilak **kétirányúak és címkézettek**:
-a Kapcsolatkezelés a Fiók- és session-kezeléstől auth-választ kap, az
-Üzenet-relay-től pedig a továbbítás eredményét. A szaggatott nyilak
-egyirányú **lekérdezések**: a Relay az ACC-től kérdezi le, melyik
-kapcsolaton aktív a címzett, a metaadat-validálást pedig párhuzamosítva
-a worker pool-nak adja át (ezekre nem érkezik önálló válasz-üzenet, az
-eredmény a hívó függvény visszatérési értékeként érkezik vissza, ezért
-egyirányú a nyíl).
+pont a szerver oldalán. A szerveren belüli vékony nyilak **kétirányúak
+és címkézettek**: a Kapcsolatkezelés a Fiók- és session-kezeléstől
+auth-választ kap, az Üzenet-relay-től pedig a továbbítás eredményét. A
+szaggatott nyilak egyirányú **lekérdezések**: a Relay az ACC-től
+kérdezi le, melyik kapcsolaton aktív a címzett, a metaadat-validálást
+pedig párhuzamosítva a worker pool-nak adja át (ezekre nem érkezik
+önálló válasz-üzenet, ezért egyirányú a nyíl).
 
 ## A komponensek szerepe
 
@@ -64,10 +89,14 @@ egyirányú a nyíl).
 - **UI** — a felhasználói felület, ami a nyers (titkosítatlan) üzeneteket
   kezeli a felhasználó szemszögéből
 - **WebCrypto API** — itt történik a tényleges titkosítás/dekódolás,
-  mielőtt az üzenet elhagyja a klienst; ez az egyetlen komponens, ami
-  ténylegesen kommunikál a szerverrel
+  mielőtt az üzenet elhagyja a klienst; ez a komponens **nem**
+  kommunikál közvetlenül a szerverrel
 - **Kulcstároló (IndexedDB)** — a hosszú távú és session-kulcsok
   böngészőn belüli, perzisztens tárolása
+- **Kapcsolattartás (WebSocket kliens)** — a szerverrel fenntartott
+  tartós kapcsolatért felel; ez az egyetlen komponens, ami ténylegesen
+  kommunikál a szerverrel — a WebCrypto API-tól kapott ciphertext-et
+  küldi tovább, és a szervertől érkező eseményeket adja vissza neki
 
 **Szerver (Node.js):**
 
@@ -97,21 +126,23 @@ esemény-jellegű üzenetek.
 
 1. A UI réteg átadja a nyers üzenetet a WebCrypto rétegnek.
 2. A WebCrypto a Kulcstárolóból vett munkamenet-kulccsal titkosítja
-   (AES-GCM), és a ciphertext-et a szervernek küldi egy WebSocket-üzenet
-   formájában.
-3. A szerver a `worker_threads` pool segítségével (ha a terhelés
+   (AES-GCM), és a ciphertext-et átadja a Kapcsolattartás (WebSocket
+   kliens) komponensnek.
+3. A Kapcsolattartás a nyitva tartott WebSocket-kapcsolaton elküldi a
+   ciphertext-et a szervernek.
+4. A szerver a `worker_threads` pool segítségével (ha a terhelés
    indokolja) ellenőrzi a metaadatokat (feladó, címzett, időbélyeg), majd
    **eseményként** ("new-message") továbbítja a címzett aktív
    WebSocket-kapcsolatára, a tartalom megismerése nélkül.
 
 **Fogadás (szerver → kliens, eseményalapú):**
 
-1. A kliens a WebSocket-kapcsolatán feliratkozik a szervertől érkező
-   eseményekre (`new-message`, `presence`, `delivery-ack`).
-2. Amikor a szerver egy `new-message` eseményt küld, a kliens
-   eseménykezelője elkapja azt, a ciphertext-et átadja a WebCrypto
-   rétegnek dekódolásra, majd a UI-t frissíti az új, immár nyers
-   üzenettel.
+1. A kliens Kapcsolattartás komponense a WebSocket-kapcsolatán
+   feliratkozik a szervertől érkező eseményekre (`new-message`,
+   `presence`, `delivery-ack`).
+2. Amikor a szerver egy `new-message` eseményt küld, a Kapcsolattartás
+   elkapja azt, a ciphertext-et átadja a WebCrypto rétegnek dekódolásra,
+   ami a UI-t frissíti az új, immár nyers üzenettel.
 3. A kliens visszaküld egy `delivery-ack` eseményt a szervernek (ez nem
    az üzenettartalomra, csak a metaadatra vonatkozik), amit a szerver
    továbbít a küldő félnek — így a küldő oldali UI jelezheti, hogy az
