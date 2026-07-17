@@ -52,7 +52,23 @@ visszaigazolásokkal (ack/receipt) együtt — a valóságban ez sem
 egyirányú: a szerver és a felek is nyugtázzák az egyes lépéseket:
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+%%{init: {"theme": "base", "themeVariables": {
+  "signalColor": "#e6e6e6",
+  "signalTextColor": "#e6e6e6",
+  "actorLineColor": "#e6e6e6",
+  "actorBorder": "#7ea6d8",
+  "actorBkg": "#1f2937",
+  "actorTextColor": "#f0f3f7",
+  "labelBoxBorderColor": "#7ea6d8",
+  "labelBoxBkgColor": "#1f2937",
+  "labelTextColor": "#f0f3f7",
+  "loopTextColor": "#f0f3f7",
+  "noteBkgColor": "#3d5573",
+  "noteTextColor": "#f0f3f7",
+  "noteBorderColor": "#7ea6d8",
+  "activationBorderColor": "#e0994f",
+  "activationBkgColor": "#3d5573"
+}}}%%
 sequenceDiagram
     participant K as Küldő kliens
     participant Sz as XMPP szerver (PubSub/PEP)
@@ -70,10 +86,8 @@ sequenceDiagram
     Note over K,C: 5. Minden további üzenetnél új ratchet-lépés<br/>(forward secrecy: régi kulcs nem fejt vissza újat)
 ```
 
-**<a id="1-abra"></a>1. ábra:** OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
-publikálásától az első titkosított üzenetig, a szerver és a felek
-visszaigazolásaival együtt. (Ez az **optimista eset** — a hibás
-esetekre lentebb.)
+**<a id="1-abra"></a>1. ábra:** OMEMO (XMPP) üzenetküldés folyamata,
+optimista eset (a hibás esetekre lentebb).
 
 !!! warning "Hibás esetek kezelése"
     Az [1. ábra](#1-abra) a protokoll szabály szerinti, hibamentes lefutását
@@ -97,6 +111,43 @@ esetekre lentebb.)
       titkosít). Ilyenkor a dekódolás hibával tér vissza; a gyakorlatban
       ez egy explicit "session invalid" jelzést vált ki, ami egy új X3DH
       kulcscserét indít el (2-4. lépés megismétlése).
+
+A [2. ábra](#2-abra) ugyanezt a három hibaesetet folyamatábraként,
+döntési pontokként mutatja — jól látszik, hogy mindhárom eset ugyanoda
+(egy explicit hibaágba) fut ki, csak más-más helyreállítási lépéssel:
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "lineColor": "#e6e6e6",
+  "textColor": "#f0f3f7",
+  "mainBkg": "#1f2937",
+  "nodeBorder": "#7ea6d8",
+  "clusterBkg": "#1f2937"
+}}}%%
+flowchart TD
+    A[Üzenet küldése] --> B{Van aktív<br/>Double Ratchet<br/>session?}
+    B -->|igen| C[Titkosítás,<br/>ratchet-lépés]
+    B -->|nem| D{Van elérhető<br/>PreKey a bundle-ben?}
+    D -->|igen| E[X3DH kulcscsere,<br/>session létrehozása]
+    D -->|nem| F[Hiba: bundle frissítés<br/>szükséges]
+    E --> C
+    C --> G{Címzett<br/>online?}
+    G -->|igen| H[Azonnali kézbesítés<br/>+ receipt]
+    G -->|nem| I[Offline tárolás,<br/>kézbesítés bejelentkezéskor]
+    C -.->|dekódolási hiba<br/>a fogadó oldalon| J[Session invalid,<br/>új X3DH indítása]
+```
+
+**<a id="2-abra"></a>2. ábra:** OMEMO üzenetküldés döntési logikája, a
+hibaágakkal.
+
+!!! note "Formális protokoll-verifikáció"
+    Elméleti szempontból az is vizsgálható lenne, hogy a fenti
+    döntésfa lefedi-e az összes lehetséges állapot/esemény
+    kombinációt (pl. modell-ellenőrzéssel, mint amit a Signal-protokoll
+    formális verifikációs munkái is alkalmaznak). Ez jelenleg nem
+    része a projektnek, de érdekes továbblépési irány lehetne a
+    "titkosítási protokollok elméleti vizsgálata" témába, ha arra
+    esne a választás.
 
 ### Matrix
 
@@ -127,12 +178,28 @@ nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. [Conduit](https://conduit.rs/)) ezen próbálnak javítani.
 
-A [2. ábra](#2-abra) a Megolm session-kulcs terjesztésének és a
+A [3. ábra](#3-abra) a Megolm session-kulcs terjesztésének és a
 csoportos titkosításnak a folyamatát mutatja, a szoba többi tagjának
 visszaigazolásaival együtt:
 
 ```mermaid
-%%{init: {"theme": "default"}}%%
+%%{init: {"theme": "base", "themeVariables": {
+  "signalColor": "#e6e6e6",
+  "signalTextColor": "#e6e6e6",
+  "actorLineColor": "#e6e6e6",
+  "actorBorder": "#7ea6d8",
+  "actorBkg": "#1f2937",
+  "actorTextColor": "#f0f3f7",
+  "labelBoxBorderColor": "#7ea6d8",
+  "labelBoxBkgColor": "#1f2937",
+  "labelTextColor": "#f0f3f7",
+  "loopTextColor": "#f0f3f7",
+  "noteBkgColor": "#3d5573",
+  "noteTextColor": "#f0f3f7",
+  "noteBorderColor": "#7ea6d8",
+  "activationBorderColor": "#e0994f",
+  "activationBkgColor": "#3d5573"
+}}}%%
 sequenceDiagram
     participant K as Küldő kliens
     participant Sz as Home szerver (esemény-DAG)
@@ -152,11 +219,12 @@ sequenceDiagram
     Sz-->>K: receipt továbbítása
 ```
 
-**<a id="2-abra"></a>2. ábra:** Matrix (Olm/Megolm) — csoportos
-üzenetküldés folyamata (optimista eset). Jól látszik a különbség az
-OMEMO-hoz ([1. ábra](#1-abra)) képest: ott minden üzenethez páronkénti
-ratchet-lépés történik, itt egy szobánkénti közös racsni-kulcsot
-osztanak meg egyszer, Olm-mal titkosítva.
+**<a id="3-abra"></a>3. ábra:** Matrix (Olm/Megolm) — csoportos
+üzenetküldés folyamata (optimista eset).
+
+Jól látszik a különbség az OMEMO-hoz ([1. ábra](#1-abra)) képest: ott
+minden üzenethez páronkénti ratchet-lépés történik, itt egy szobánkénti
+közös racsni-kulcsot osztanak meg egyszer, Olm-mal titkosítva.
 
 !!! warning "Hibás esetek kezelése"
     - **Új tag csatlakozik a szobához, miután már folyt a beszélgetés.**
