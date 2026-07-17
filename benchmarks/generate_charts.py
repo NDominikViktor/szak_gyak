@@ -116,7 +116,12 @@ def plot_encryption_chart():
         mean_y = sum(Y) / n_pts
         a = sum((x - mean_x) * (y - mean_y) for x, y in zip(X, Y)) / sum((x - mean_x) ** 2 for x in X)
         b = mean_y - a * mean_x
-        fit_x = [min(sizes), max(sizes)]
+        # A szaggatott vonalat csak addig a méretig rajzoljuk, ameddig a
+        # modell ténylegesen érvényes (~1 MB-ig) - fölötte a modell
+        # szándékosan alulbecsül (ld. dokumentáció), és a teljes
+        # tartományra kihúzva félrevezető lenne az ábrán.
+        valid_max = min(max(sizes), 1_000_000)
+        fit_x = [min(sizes), valid_max]
         fit_y = [a + b * x for x in fit_x]
         ax.plot(fit_x, fit_y, "--", color=RUNTIME_COLORS[runtime], linewidth=1.2, alpha=0.7)
 
@@ -241,17 +246,7 @@ def plot_warmup_illustration():
     print(f"Mentve: {out}")
 
 
-def plot_distribution():
-    """A mérési idők eloszlását szemlélteti (hisztogram + illesztett
-    normális sűrűségfüggvény) a trimmelt (warm-up utáni) mintákon, a
-    legkisebb üzenetméretre. Csak akkor fut, ha van nyers minta-export."""
-    raw_path = RESULTS / "latest-run-raw-samples.csv"
-    if not raw_path.exists():
-        print("Kihagyva: distribution-chart.png (nincs nyers minta-export)")
-        return
-
-    rows = read_csv(raw_path)
-    size = sorted({int(r["size_bytes"]) for r in rows})[0]
+def _plot_distribution_for_size(rows, size, out_name):
     runtime = runtime_key(rows[0]["runtime"])
     series = [r for r in rows if int(r["size_bytes"]) == size]
     series.sort(key=lambda r: int(r["sample_index"]))
@@ -271,6 +266,9 @@ def plot_distribution():
             cutoff = i * window
             break
     trimmed = times[cutoff:]
+    if len(trimmed) < 5:
+        print(f"Kihagyva: {out_name} (túl kevés trimmelt minta: {len(trimmed)})")
+        return
 
     n = len(trimmed)
     mean = sum(trimmed) / n
@@ -294,10 +292,29 @@ def plot_distribution():
     ax.set_title(f"Mérési idők eloszlása ({RUNTIME_LABELS[runtime]}, {size} byte, n={n}, warm-up nélkül)")
     ax.legend()
     fig.tight_layout()
-    out = HERE / "distribution-chart.png"
+    out = HERE / out_name
     fig.savefig(out)
     plt.close(fig)
     print(f"Mentve: {out}")
+
+
+def plot_distribution():
+    """A mérési idők eloszlását szemlélteti (hisztogram + illesztett
+    normális sűrűségfüggvény) a trimmelt (warm-up utáni) mintákon - a
+    legkisebb ÉS a legnagyobb üzenetméretre is (utóbbinál, ahol az idő
+    már messze van a 0-tól, jellegzetesebben elválna egy log-normális/
+    Gamma-eloszlástól a normális, ha az a helyesebb modell).
+    Csak akkor fut, ha van nyers minta-export."""
+    raw_path = RESULTS / "latest-run-raw-samples.csv"
+    if not raw_path.exists():
+        print("Kihagyva: distribution-chart*.png (nincs nyers minta-export)")
+        return
+
+    rows = read_csv(raw_path)
+    sizes = sorted({int(r["size_bytes"]) for r in rows})
+    _plot_distribution_for_size(rows, sizes[0], "distribution-chart.png")
+    if len(sizes) > 1:
+        _plot_distribution_for_size(rows, sizes[-1], "distribution-chart-large.png")
 
 
 ARROW_COLOR = "#c0392b"

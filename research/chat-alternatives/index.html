@@ -1007,7 +1007,23 @@ Népszerű szerver-implementációk: <a href="https://prosody.im/">Prosody</a>,
 <p>Az <a href="#1-abra">1. ábra</a> a fent leírt lépéseket foglalja össze, a
 visszaigazolásokkal (ack/receipt) együtt — a valóságban ez sem
 egyirányú: a szerver és a felek is nyugtázzák az egyes lépéseket:</p>
-<pre class="mermaid"><code>%%{init: {"theme": "default"}}%%
+<pre class="mermaid"><code>%%{init: {"theme": "base", "themeVariables": {
+  "signalColor": "#e6e6e6",
+  "signalTextColor": "#e6e6e6",
+  "actorLineColor": "#e6e6e6",
+  "actorBorder": "#7ea6d8",
+  "actorBkg": "#1f2937",
+  "actorTextColor": "#f0f3f7",
+  "labelBoxBorderColor": "#7ea6d8",
+  "labelBoxBkgColor": "#1f2937",
+  "labelTextColor": "#f0f3f7",
+  "loopTextColor": "#f0f3f7",
+  "noteBkgColor": "#3d5573",
+  "noteTextColor": "#f0f3f7",
+  "noteBorderColor": "#7ea6d8",
+  "activationBorderColor": "#e0994f",
+  "activationBkgColor": "#3d5573"
+}}}%%
 sequenceDiagram
     participant K as Küldő kliens
     participant Sz as XMPP szerver (PubSub/PEP)
@@ -1023,10 +1039,8 @@ sequenceDiagram
     C--&gt;&gt;Sz: delivery receipt (XEP-0184)
     Sz--&gt;&gt;K: receipt továbbítása
     Note over K,C: 5. Minden további üzenetnél új ratchet-lépés&lt;br/&gt;(forward secrecy: régi kulcs nem fejt vissza újat)</code></pre>
-<p><strong><a id="1-abra"></a>1. ábra:</strong> OMEMO (XMPP) — üzenetküldés folyamata a kulcscsomag
-publikálásától az első titkosított üzenetig, a szerver és a felek
-visszaigazolásaival együtt. (Ez az <strong>optimista eset</strong> — a hibás
-esetekre lentebb.)</p>
+<p><strong><a id="1-abra"></a>1. ábra:</strong> OMEMO (XMPP) üzenetküldés folyamata,
+optimista eset (a hibás esetekre lentebb).</p>
 <div class="admonition warning">
 <p class="admonition-title">Hibás esetek kezelése</p>
 <p>Az <a href="#1-abra">1. ábra</a> a protokoll szabály szerinti, hibamentes lefutását
@@ -1051,6 +1065,39 @@ mutatja. A gyakorlatban legalább három hibaosztályt kell kezelni:</p>
   ez egy explicit "session invalid" jelzést vált ki, ami egy új X3DH
   kulcscserét indít el (2-4. lépés megismétlése).</li>
 </ul>
+</div>
+<p>A <a href="#2-abra">2. ábra</a> ugyanezt a három hibaesetet folyamatábraként,
+döntési pontokként mutatja — jól látszik, hogy mindhárom eset ugyanoda
+(egy explicit hibaágba) fut ki, csak más-más helyreállítási lépéssel:</p>
+<pre class="mermaid"><code>%%{init: {"theme": "base", "themeVariables": {
+  "lineColor": "#e6e6e6",
+  "textColor": "#f0f3f7",
+  "mainBkg": "#1f2937",
+  "nodeBorder": "#7ea6d8",
+  "clusterBkg": "#1f2937"
+}}}%%
+flowchart TD
+    A[Üzenet küldése] --&gt; B{Van aktív&lt;br/&gt;Double Ratchet&lt;br/&gt;session?}
+    B --&gt;|igen| C[Titkosítás,&lt;br/&gt;ratchet-lépés]
+    B --&gt;|nem| D{Van elérhető&lt;br/&gt;PreKey a bundle-ben?}
+    D --&gt;|igen| E[X3DH kulcscsere,&lt;br/&gt;session létrehozása]
+    D --&gt;|nem| F[Hiba: bundle frissítés&lt;br/&gt;szükséges]
+    E --&gt; C
+    C --&gt; G{Címzett&lt;br/&gt;online?}
+    G --&gt;|igen| H[Azonnali kézbesítés&lt;br/&gt;+ receipt]
+    G --&gt;|nem| I[Offline tárolás,&lt;br/&gt;kézbesítés bejelentkezéskor]
+    C -.-&gt;|dekódolási hiba&lt;br/&gt;a fogadó oldalon| J[Session invalid,&lt;br/&gt;új X3DH indítása]</code></pre>
+<p><strong><a id="2-abra"></a>2. ábra:</strong> OMEMO üzenetküldés döntési logikája, a
+hibaágakkal.</p>
+<div class="admonition note">
+<p class="admonition-title">Formális protokoll-verifikáció</p>
+<p>Elméleti szempontból az is vizsgálható lenne, hogy a fenti
+döntésfa lefedi-e az összes lehetséges állapot/esemény
+kombinációt (pl. modell-ellenőrzéssel, mint amit a Signal-protokoll
+formális verifikációs munkái is alkalmaznak). Ez jelenleg nem
+része a projektnek, de érdekes továbblépési irány lehetne a
+"titkosítási protokollok elméleti vizsgálata" témába, ha arra
+esne a választás.</p>
 </div>
 <h3 id="matrix">Matrix<a class="headerlink" href="#matrix" title="Permanent link">&para;</a></h3>
 <p><strong>Hivatalos oldal:</strong> <a href="https://matrix.org/">matrix.org</a> | <strong>Specifikáció:</strong>
@@ -1078,10 +1125,26 @@ nagyobb erőforrást igényel, és a hivatalos szerver-szoftver
 (<a href="https://github.com/element-hq/synapse">Synapse</a>) admin oldalról
 nehézkesebb, mint az XMPP szerverek — újabb, könnyebb implementációk
 (pl. <a href="https://conduit.rs/">Conduit</a>) ezen próbálnak javítani.</p>
-<p>A <a href="#2-abra">2. ábra</a> a Megolm session-kulcs terjesztésének és a
+<p>A <a href="#3-abra">3. ábra</a> a Megolm session-kulcs terjesztésének és a
 csoportos titkosításnak a folyamatát mutatja, a szoba többi tagjának
 visszaigazolásaival együtt:</p>
-<pre class="mermaid"><code>%%{init: {"theme": "default"}}%%
+<pre class="mermaid"><code>%%{init: {"theme": "base", "themeVariables": {
+  "signalColor": "#e6e6e6",
+  "signalTextColor": "#e6e6e6",
+  "actorLineColor": "#e6e6e6",
+  "actorBorder": "#7ea6d8",
+  "actorBkg": "#1f2937",
+  "actorTextColor": "#f0f3f7",
+  "labelBoxBorderColor": "#7ea6d8",
+  "labelBoxBkgColor": "#1f2937",
+  "labelTextColor": "#f0f3f7",
+  "loopTextColor": "#f0f3f7",
+  "noteBkgColor": "#3d5573",
+  "noteTextColor": "#f0f3f7",
+  "noteBorderColor": "#7ea6d8",
+  "activationBorderColor": "#e0994f",
+  "activationBkgColor": "#3d5573"
+}}}%%
 sequenceDiagram
     participant K as Küldő kliens
     participant Sz as Home szerver (esemény-DAG)
@@ -1099,11 +1162,11 @@ sequenceDiagram
     Sz-&gt;&gt;T: esemény terjesztése (DAG-ba fűzve)
     T--&gt;&gt;Sz: m.receipt (olvasási visszaigazolás)
     Sz--&gt;&gt;K: receipt továbbítása</code></pre>
-<p><strong><a id="2-abra"></a>2. ábra:</strong> Matrix (Olm/Megolm) — csoportos
-üzenetküldés folyamata (optimista eset). Jól látszik a különbség az
-OMEMO-hoz (<a href="#1-abra">1. ábra</a>) képest: ott minden üzenethez páronkénti
-ratchet-lépés történik, itt egy szobánkénti közös racsni-kulcsot
-osztanak meg egyszer, Olm-mal titkosítva.</p>
+<p><strong><a id="3-abra"></a>3. ábra:</strong> Matrix (Olm/Megolm) — csoportos
+üzenetküldés folyamata (optimista eset).</p>
+<p>Jól látszik a különbség az OMEMO-hoz (<a href="#1-abra">1. ábra</a>) képest: ott
+minden üzenethez páronkénti ratchet-lépés történik, itt egy szobánkénti
+közös racsni-kulcsot osztanak meg egyszer, Olm-mal titkosítva.</p>
 <div class="admonition warning">
 <p class="admonition-title">Hibás esetek kezelése</p>
 <ul>

@@ -869,16 +869,18 @@ egymás mellett, tükrözve szerepelnek; a szerver csak közvetít köztük.</p>
         direction TB
         A_UI["UI"] &lt;--&gt; A_WC["WebCrypto API"]
         A_WC &lt;--&gt; A_KS[("Kulcstároló (IndexedDB)")]
+        A_WC &lt;--&gt; A_NET["Kapcsolattartás (WebSocket kliens)"]
     end
 
     subgraph KB["Kliens B (böngésző)"]
         direction TB
         B_UI["UI"] &lt;--&gt; B_WC["WebCrypto API"]
         B_WC &lt;--&gt; B_KS[("Kulcstároló (IndexedDB)")]
+        B_WC &lt;--&gt; B_NET["Kapcsolattartás (WebSocket kliens)"]
     end
 
-    A_WC ==&gt;|"ciphertext (küldés) / esemény (fogadás)"| CONN
-    B_WC ==&gt;|"ciphertext (küldés) / esemény (fogadás)"| CONN
+    A_NET ==&gt;|"ciphertext (küldés) / esemény (fogadás)"| CONN
+    B_NET ==&gt;|"ciphertext (küldés) / esemény (fogadás)"| CONN
 
     subgraph SZ["Szerver (Node.js)"]
         direction TB
@@ -897,29 +899,49 @@ kétirányú — ezt a felirat és a szöveges magyarázat jelzi. Az egyirányú
 rendezője véletlenszerűen helyezte a szervert hol fölé, hol alá a
 klienseknek.)</em></p>
 <p><strong><a id="1-abra"></a>1. ábra:</strong> a tervezett rendszer komponensei és az
-adatfolyam iránya. A kapcsolódási pont mindkét kliens esetén konkrétan a
-<strong>WebCrypto API</strong> komponens — nem a kliens egésze —, mert csakis onnan
-hagyhatja el ciphertext formájában az üzenet a böngészőt, és csak oda
-érkezhet vissza dekódolásra. A vastag nyilak (kliens ↔ szerver) mindig a
+adatfolyam iránya.</p>
+<p>A kliens oldalon a kapcsolattartásért kifejezetten a <strong>Kapcsolattartás
+(WebSocket kliens)</strong> komponens felel — ez tartja a tartós kapcsolatot a
+szerverrel, és ez ad át/vesz át ciphertext-et a WebCrypto API-tól. A
+WebCrypto API tehát csak titkosít/dekódol, magát a hálózati kapcsolatot
+nem kezeli — ezt korábban a diagram nem különítette el, ami
+félreérthető volt. A szerver oldalán a <strong>Kapcsolatkezelés</strong> tölti be
+ugyanezt a szerepet.</p>
+<p>A <a href="#2-abra">2. ábra</a> egy kliens felépítését mutatja részletesebben,
+hogy ez a négy komponens és a köztük futó adat jobban kivehető legyen
+a fő ábra túlzsúfolása nélkül:</p>
+<pre class="mermaid"><code>flowchart LR
+    UI["UI&lt;br/&gt;(nyers üzenet)"] --&gt;|"nyers szöveg"| WC["WebCrypto API&lt;br/&gt;(titkosítás/dekódolás)"]
+    WC --&gt;|"nyers szöveg"| UI
+    WC &lt;--&gt;|"kulcs lekérése/tárolása"| KS[("Kulcstároló&lt;br/&gt;(IndexedDB)")]
+    WC --&gt;|"ciphertext"| NET["Kapcsolattartás&lt;br/&gt;(WebSocket kliens)"]
+    NET --&gt;|"esemény (ciphertext)"| WC
+    NET &lt;--&gt;|"tartós WS-kapcsolat"| SRV(["Szerver"])</code></pre>
+<p><strong><a id="2-abra"></a>2. ábra:</strong> egy kliens (böngésző) belső felépítése
+részletesen.</p>
+<p>A <a href="#1-abra">1. ábra</a>-n a vastag nyilak (kliens ↔ szerver) mindig a
 <strong>Kapcsolatkezelés</strong> komponensnél végződnek — ez az egyetlen belépési
-pont. A szerveren belüli vékony nyilak <strong>kétirányúak és címkézettek</strong>:
-a Kapcsolatkezelés a Fiók- és session-kezeléstől auth-választ kap, az
-Üzenet-relay-től pedig a továbbítás eredményét. A szaggatott nyilak
-egyirányú <strong>lekérdezések</strong>: a Relay az ACC-től kérdezi le, melyik
-kapcsolaton aktív a címzett, a metaadat-validálást pedig párhuzamosítva
-a worker pool-nak adja át (ezekre nem érkezik önálló válasz-üzenet, az
-eredmény a hívó függvény visszatérési értékeként érkezik vissza, ezért
-egyirányú a nyíl).</p>
+pont a szerver oldalán. A szerveren belüli vékony nyilak <strong>kétirányúak
+és címkézettek</strong>: a Kapcsolatkezelés a Fiók- és session-kezeléstől
+auth-választ kap, az Üzenet-relay-től pedig a továbbítás eredményét. A
+szaggatott nyilak egyirányú <strong>lekérdezések</strong>: a Relay az ACC-től
+kérdezi le, melyik kapcsolaton aktív a címzett, a metaadat-validálást
+pedig párhuzamosítva a worker pool-nak adja át (ezekre nem érkezik
+önálló válasz-üzenet, ezért egyirányú a nyíl).</p>
 <h2 id="a-komponensek-szerepe">A komponensek szerepe<a class="headerlink" href="#a-komponensek-szerepe" title="Permanent link">&para;</a></h2>
 <p><strong>Kliens (böngésző, mindkét oldalon azonos felépítéssel):</strong></p>
 <ul>
 <li><strong>UI</strong> — a felhasználói felület, ami a nyers (titkosítatlan) üzeneteket
   kezeli a felhasználó szemszögéből</li>
 <li><strong>WebCrypto API</strong> — itt történik a tényleges titkosítás/dekódolás,
-  mielőtt az üzenet elhagyja a klienst; ez az egyetlen komponens, ami
-  ténylegesen kommunikál a szerverrel</li>
+  mielőtt az üzenet elhagyja a klienst; ez a komponens <strong>nem</strong>
+  kommunikál közvetlenül a szerverrel</li>
 <li><strong>Kulcstároló (IndexedDB)</strong> — a hosszú távú és session-kulcsok
   böngészőn belüli, perzisztens tárolása</li>
+<li><strong>Kapcsolattartás (WebSocket kliens)</strong> — a szerverrel fenntartott
+  tartós kapcsolatért felel; ez az egyetlen komponens, ami ténylegesen
+  kommunikál a szerverrel — a WebCrypto API-tól kapott ciphertext-et
+  küldi tovább, és a szervertől érkező eseményeket adja vissza neki</li>
 </ul>
 <p><strong>Szerver (Node.js):</strong></p>
 <ul>
@@ -947,8 +969,10 @@ esemény-jellegű üzenetek.</p>
 <ol>
 <li>A UI réteg átadja a nyers üzenetet a WebCrypto rétegnek.</li>
 <li>A WebCrypto a Kulcstárolóból vett munkamenet-kulccsal titkosítja
-   (AES-GCM), és a ciphertext-et a szervernek küldi egy WebSocket-üzenet
-   formájában.</li>
+   (AES-GCM), és a ciphertext-et átadja a Kapcsolattartás (WebSocket
+   kliens) komponensnek.</li>
+<li>A Kapcsolattartás a nyitva tartott WebSocket-kapcsolaton elküldi a
+   ciphertext-et a szervernek.</li>
 <li>A szerver a <code>worker_threads</code> pool segítségével (ha a terhelés
    indokolja) ellenőrzi a metaadatokat (feladó, címzett, időbélyeg), majd
    <strong>eseményként</strong> ("new-message") továbbítja a címzett aktív
@@ -956,12 +980,12 @@ esemény-jellegű üzenetek.</p>
 </ol>
 <p><strong>Fogadás (szerver → kliens, eseményalapú):</strong></p>
 <ol>
-<li>A kliens a WebSocket-kapcsolatán feliratkozik a szervertől érkező
-   eseményekre (<code>new-message</code>, <code>presence</code>, <code>delivery-ack</code>).</li>
-<li>Amikor a szerver egy <code>new-message</code> eseményt küld, a kliens
-   eseménykezelője elkapja azt, a ciphertext-et átadja a WebCrypto
-   rétegnek dekódolásra, majd a UI-t frissíti az új, immár nyers
-   üzenettel.</li>
+<li>A kliens Kapcsolattartás komponense a WebSocket-kapcsolatán
+   feliratkozik a szervertől érkező eseményekre (<code>new-message</code>,
+   <code>presence</code>, <code>delivery-ack</code>).</li>
+<li>Amikor a szerver egy <code>new-message</code> eseményt küld, a Kapcsolattartás
+   elkapja azt, a ciphertext-et átadja a WebCrypto rétegnek dekódolásra,
+   ami a UI-t frissíti az új, immár nyers üzenettel.</li>
 <li>A kliens visszaküld egy <code>delivery-ack</code> eseményt a szervernek (ez nem
    az üzenettartalomra, csak a metaadatra vonatkozik), amit a szerver
    továbbít a küldő félnek — így a küldő oldali UI jelezheti, hogy az
