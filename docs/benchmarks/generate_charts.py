@@ -151,6 +151,52 @@ def plot_encryption_chart():
     print(f"Mentve: {out}")
 
 
+def plot_regression_residuals():
+    """A súlyozott illesztés becsült és a ténylegesen mért idők közötti
+    előjeles, relatív eltérését ábrázolja méretenként - ugyanaz a
+    'mennyire jó az illesztés' kérdés, mint az 5. táblázat, csak
+    vizuálisan, minden ponthoz."""
+    csv_path = latest_or_fallback("latest-run.csv", "encryption-v3-decimal.csv")
+    rows = [normalize_row(r) for r in read_csv(csv_path)]
+
+    fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+    for runtime in ("node", "deno", "bun"):
+        points = [r for r in rows if r["runtime"] == runtime]
+        if not points:
+            continue
+        points.sort(key=lambda r: int(r["size_bytes"]))
+        sizes = [int(r["size_bytes"]) for r in points]
+        avgs = [float(r["avg_ms"]) for r in points]
+
+        n_pts = len(sizes)
+        X = [1 / s for s in sizes]
+        Y = [t / s for s, t in zip(sizes, avgs)]
+        mean_x = sum(X) / n_pts
+        mean_y = sum(Y) / n_pts
+        a = sum((x - mean_x) * (y - mean_y) for x, y in zip(X, Y)) / sum((x - mean_x) ** 2 for x in X)
+        b = mean_y - a * mean_x
+
+        rel_error = [100 * ((a + b * s) - t) / t for s, t in zip(sizes, avgs)]
+        ax.plot(sizes, rel_error, "o-", color=RUNTIME_COLORS[runtime],
+                label=RUNTIME_LABELS[runtime], markersize=6)
+
+    ax.axhline(0, color="#888", linewidth=1, linestyle="-")
+    ax.axvline(1_000_000, color="#888", linewidth=1, linestyle=":")
+    ax.text(1_000_000, ax.get_ylim()[1] * 0.9, " illesztés\n érvényes\n tartománya\n vége →",
+            fontsize=7, color="#888")
+    ax.set_xscale("log")
+    ax.set_xlabel("Üzenetméret (byte, log skála)")
+    ax.set_ylabel("Előjeles relatív eltérés: (becsült - mért) / mért, %")
+    ax.set_title("A súlyozott illesztés hibája méretenként (reziduálok)")
+    ax.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.6)
+    ax.legend()
+    fig.tight_layout()
+    out = HERE / "regression-residuals-chart.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"Mentve: {out}")
+
+
 def read_warmup_rows():
     latest = RESULTS / "latest-run.csv"
     if latest.exists():
@@ -278,14 +324,38 @@ def _plot_distribution_for_size(rows, size, out_name):
     fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
     ax.hist(trimmed, bins=20, density=True, color="#5fa052", alpha=0.6, label="trimmelt minták")
 
-    # illesztett normális sűrűségfüggvény
     xs = [mean - 4 * stddev + i * (8 * stddev / 200) for i in range(201)]
-    ys = [
+    xs = [x for x in xs if x > 0] or [mean * 0.01 * i for i in range(1, 201)]
+
+    # normális (momentum-módszer: mu=átlag, sigma=tapasztalati szórás)
+    ys_norm = [
         (1 / (stddev * (2 * math.pi) ** 0.5)) * math.exp(-((x - mean) ** 2) / (2 * stddev ** 2))
         for x in xs
     ]
-    ax.plot(xs, ys, "-", color=ARROW_COLOR, linewidth=1.8,
-             label=f"illesztett normális (μ={mean:.3f}, σ={stddev:.3f})")
+    ax.plot(xs, ys_norm, "-", color=ARROW_COLOR, linewidth=1.8,
+             label=f"normális (μ={mean:.3f}, σ={stddev:.3f})")
+
+    # log-normális (momentum-módszer): a nyers átlag/szórásból vezetjük le
+    # a log-térbeli mu/sigma paramétereket
+    ln_sigma2 = math.log(1 + variance / mean ** 2)
+    ln_sigma = ln_sigma2 ** 0.5
+    ln_mu = math.log(mean) - ln_sigma2 / 2
+    ys_lognorm = [
+        (1 / (x * ln_sigma * (2 * math.pi) ** 0.5)) * math.exp(-((math.log(x) - ln_mu) ** 2) / (2 * ln_sigma2))
+        for x in xs
+    ]
+    ax.plot(xs, ys_lognorm, "-", color="#2b6cb0", linewidth=1.8,
+             label=f"log-normális (μ={ln_mu:.3f}, σ={ln_sigma:.3f})")
+
+    # Gamma-eloszlás (momentum-módszer): shape k, scale theta
+    k_shape = mean ** 2 / variance
+    theta_scale = variance / mean
+    ys_gamma = [
+        (x ** (k_shape - 1) * math.exp(-x / theta_scale)) / (theta_scale ** k_shape * math.gamma(k_shape))
+        for x in xs
+    ]
+    ax.plot(xs, ys_gamma, "-", color="#e0994f", linewidth=1.8,
+             label=f"Gamma (k={k_shape:.3f}, θ={theta_scale:.3f})")
 
     ax.set_xlabel("Titkosítási idő (ms)")
     ax.set_ylabel("Sűrűség")
@@ -338,6 +408,7 @@ ARROW_COLOR = "#c0392b"
 
 if __name__ == "__main__":
     plot_encryption_chart()
+    plot_regression_residuals()
     plot_warmup_chart()
     plot_warmup_illustration()
     plot_distribution()
