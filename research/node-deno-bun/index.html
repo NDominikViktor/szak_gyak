@@ -1338,13 +1338,15 @@ különböztethető meg — mindkettő "keskeny csúcs + hosszú farok" alakú
 ilyen közelségben a nullához. Nagyobb bemeretnél (pl. 1 MB), ahol a
 mért idő már messze van a 0-tól, jellegzetesebben elválna a kettő: a
 normális eloszlás szimmetrikus maradna a csúcs körül, míg egy
-log-normális/Gamma-eloszlás jobbra ferde maradna akkor is. Ezt egy
-nagyobb bemeretre lefuttatott hisztogrammal érdemes ellenőrizni — ehhez
-a <code>generate_charts.py</code> most már a legnagyobb, kellően sok mintával
-rendelkező méretre is elkészíti a hisztogramot:</p>
+log-normális/Gamma-eloszlás jobbra ferde maradna akkor is. A <code>generate_charts.py</code> most már a legnagyobb, kellően sok mintával
+rendelkező méretre is elkészíti a hisztogramot, és a normális mellett
+a <strong>log-normális</strong> és a <strong>Gamma</strong>-eloszlást is illeszti rá (momentum-
+módszerrel becsült paraméterekkel), hogy vizuálisan összevethető
+legyen, melyik írja le jobban az alakot:</p>
 <p><img alt="Mérési idők eloszlása, nagyobb üzenetméret" src="../../benchmarks/distribution-chart-large.png" /></p>
 <p><strong><a id="4-abra"></a><em>4. ábra:</em></strong> ugyanaz, mint a <a href="#3-abra">3. ábra</a>,
-de a legnagyobb (kellő mintaszámú) üzenetméretnél.</p>
+de a legnagyobb (kellő mintaszámú) üzenetméretnél, három illesztett
+eloszlással (normális, log-normális, Gamma).</p>
 <p><strong>Miért log-normális/Gamma és nem pl. exponenciális vagy Weibull a
 jelölt?</strong> A mérési idő több, egymást szorzó jellegű késleltetés-forrás
 (rendszerhívás overhead, memóriafoglalás, cache-hatás, esetleges
@@ -1354,6 +1356,17 @@ vezet (a centrális határeloszlás-tétel logaritmikus változata). A tisztán
 exponenciális eloszlás itt kevésbé indokolt, mert az feltételezné, hogy
 a leggyakoribb érték maga a 0 (nincs csúcs) — a hisztogramon viszont
 jól látható csúcs van a tipikus érték körül, nem a nullánál.</p>
+<div class="admonition note">
+<p class="admonition-title">Mintaszám korlátja</p>
+<p>A <a href="#4-abra">4. ábra</a> mintaszáma (a mérőgéptől függően kb. 150-200)
+valószínűleg még mindig nem elég ahhoz, hogy a három illesztett
+eloszlás közötti különbség egyértelműen eldönthető legyen csak
+vizuálisan — ehhez lényegesen nagyobb mintaszám (pl. több ezer,
+<code>--iteration-multiplier</code> nagy értékével) és formális
+illeszkedésvizsgálat (pl. Kolmogorov-Szmirnov-teszt) kellene. A
+jelenlegi ábra inkább szemléltető, mint statisztikailag
+megalapozott döntés.</p>
+</div>
 <h2 id="titkositasi-muvelet-ideje-aes-gcm-100-b-100-000-000-b-warm-up-kiszurve">Titkosítási művelet ideje (AES-GCM), 100 B - 100 000 000 B, warm-up kiszűrve<a class="headerlink" href="#titkositasi-muvelet-ideje-aes-gcm-100-b-100-000-000-b-warm-up-kiszurve" title="Permanent link">&para;</a></h2>
 <p>A <a href="#5-abra">5. ábra</a> a mért átlagos titkosítási időt mutatja, 95%-os
 konfidencia-intervallummal és az illesztett, súlyozott lineáris
@@ -1533,6 +1546,10 @@ ténylegesen mért idők közötti eltérés méretenként.</p>
 <li>1 MB fölött egyik runtime-nál sem használjuk a modellt — ott a nyers
   mérési pontok (ld. <a href="#5-abra">5. ábra</a>) a megbízható forrás.</li>
 </ul>
+<p>Ugyanez az 5. táblázat vizuálisan, minden mérési pontra kiterjesztve:</p>
+<p><img alt="Regressziós reziduálok" src="../../benchmarks/regression-residuals-chart.png" /></p>
+<p><strong><a id="6-abra"></a>6. ábra:</strong> a súlyozott illesztés előjeles relatív
+hibája méretenként.</p>
 <p>A titkosítási chart-on (<a href="#5-abra">5. ábra</a>) ezért a szaggatott illesztési
 vonal is csak 1 MB-ig van kirajzolva, hogy a fölötte lévő, ismerten
 pontatlan extrapoláció ne tűnjön félrevezető módon "illeszkedő"

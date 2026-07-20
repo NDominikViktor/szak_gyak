@@ -1067,8 +1067,10 @@ mutatja. A gyakorlatban legalább három hibaosztályt kell kezelni:</p>
 </ul>
 </div>
 <p>A <a href="#2-abra">2. ábra</a> ugyanezt a három hibaesetet folyamatábraként,
-döntési pontokként mutatja — jól látszik, hogy mindhárom eset ugyanoda
-(egy explicit hibaágba) fut ki, csak más-más helyreállítási lépéssel:</p>
+döntési pontokként mutatja — minden elágazás egy rombusz (döntési
+csomópont) kimenete, a hibaágak sem kivételek: a fogadó oldali
+dekódolási hiba is egy külön döntési ponton keresztül vezet a
+helyreállítási lépéshez, nem közvetlenül egy műveleti dobozból:</p>
 <pre class="mermaid"><code>%%{init: {"theme": "base", "themeVariables": {
   "lineColor": "#e6e6e6",
   "textColor": "#f0f3f7",
@@ -1084,9 +1086,12 @@ flowchart TD
     D --&gt;|nem| F[Hiba: bundle frissítés&lt;br/&gt;szükséges]
     E --&gt; C
     C --&gt; G{Címzett&lt;br/&gt;online?}
-    G --&gt;|igen| H[Azonnali kézbesítés&lt;br/&gt;+ receipt]
+    G --&gt;|igen| H[Azonnali kézbesítés]
     G --&gt;|nem| I[Offline tárolás,&lt;br/&gt;kézbesítés bejelentkezéskor]
-    C -.-&gt;|dekódolási hiba&lt;br/&gt;a fogadó oldalon| J[Session invalid,&lt;br/&gt;új X3DH indítása]</code></pre>
+    H --&gt; K{Fogadó oldali&lt;br/&gt;dekódolás sikeres?}
+    I --&gt; K
+    K --&gt;|igen| L[Üzenet megjelenítve&lt;br/&gt;+ receipt]
+    K --&gt;|nem| J[Session invalid,&lt;br/&gt;új X3DH indítása]</code></pre>
 <p><strong><a id="2-abra"></a>2. ábra:</strong> OMEMO üzenetküldés döntési logikája, a
 hibaágakkal.</p>
 <div class="admonition note">
@@ -1094,10 +1099,13 @@ hibaágakkal.</p>
 <p>Elméleti szempontból az is vizsgálható lenne, hogy a fenti
 döntésfa lefedi-e az összes lehetséges állapot/esemény
 kombinációt (pl. modell-ellenőrzéssel, mint amit a Signal-protokoll
-formális verifikációs munkái is alkalmaznak). Ez jelenleg nem
-része a projektnek, de érdekes továbblépési irány lehetne a
-"titkosítási protokollok elméleti vizsgálata" témába, ha arra
-esne a választás.</p>
+formális verifikációs munkái is alkalmaznak — ld. Cohn-Gordon,
+K., Cremers, C., Dowling, B., Garratt, L., &amp; Stebila, D.: <em>A
+Formal Security Analysis of the Signal Messaging Protocol</em>, IEEE
+EuroS&amp;P 2017, később bővített változat: <em>Journal of Cryptology</em>
+33, 2020). Ez jelenleg nem része a projektnek, de érdekes
+továbblépési irány lehetne a "titkosítási protokollok elméleti
+vizsgálata" témába, ha arra esne a választás.</p>
 </div>
 <h3 id="matrix">Matrix<a class="headerlink" href="#matrix" title="Permanent link">&para;</a></h3>
 <p><strong>Hivatalos oldal:</strong> <a href="https://matrix.org/">matrix.org</a> | <strong>Specifikáció:</strong>
