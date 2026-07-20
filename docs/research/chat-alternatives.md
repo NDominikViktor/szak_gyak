@@ -113,8 +113,10 @@ optimista eset (a hibás esetekre lentebb).
       kulcscserét indít el (2-4. lépés megismétlése).
 
 A [2. ábra](#2-abra) ugyanezt a három hibaesetet folyamatábraként,
-döntési pontokként mutatja — jól látszik, hogy mindhárom eset ugyanoda
-(egy explicit hibaágba) fut ki, csak más-más helyreállítási lépéssel:
+döntési pontokként mutatja — minden elágazás egy rombusz (döntési
+csomópont) kimenete, a hibaágak sem kivételek: a fogadó oldali
+dekódolási hiba is egy külön döntési ponton keresztül vezet a
+helyreállítási lépéshez, nem közvetlenül egy műveleti dobozból:
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {
@@ -132,9 +134,12 @@ flowchart TD
     D -->|nem| F[Hiba: bundle frissítés<br/>szükséges]
     E --> C
     C --> G{Címzett<br/>online?}
-    G -->|igen| H[Azonnali kézbesítés<br/>+ receipt]
+    G -->|igen| H[Azonnali kézbesítés]
     G -->|nem| I[Offline tárolás,<br/>kézbesítés bejelentkezéskor]
-    C -.->|dekódolási hiba<br/>a fogadó oldalon| J[Session invalid,<br/>új X3DH indítása]
+    H --> K{Fogadó oldali<br/>dekódolás sikeres?}
+    I --> K
+    K -->|igen| L[Üzenet megjelenítve<br/>+ receipt]
+    K -->|nem| J[Session invalid,<br/>új X3DH indítása]
 ```
 
 **<a id="2-abra"></a>2. ábra:** OMEMO üzenetküldés döntési logikája, a
@@ -144,10 +149,13 @@ hibaágakkal.
     Elméleti szempontból az is vizsgálható lenne, hogy a fenti
     döntésfa lefedi-e az összes lehetséges állapot/esemény
     kombinációt (pl. modell-ellenőrzéssel, mint amit a Signal-protokoll
-    formális verifikációs munkái is alkalmaznak). Ez jelenleg nem
-    része a projektnek, de érdekes továbblépési irány lehetne a
-    "titkosítási protokollok elméleti vizsgálata" témába, ha arra
-    esne a választás.
+    formális verifikációs munkái is alkalmaznak — ld. Cohn-Gordon,
+    K., Cremers, C., Dowling, B., Garratt, L., & Stebila, D.: *A
+    Formal Security Analysis of the Signal Messaging Protocol*, IEEE
+    EuroS&P 2017, később bővített változat: *Journal of Cryptology*
+    33, 2020). Ez jelenleg nem része a projektnek, de érdekes
+    továbblépési irány lehetne a "titkosítási protokollok elméleti
+    vizsgálata" témába, ha arra esne a választás.
 
 ### Matrix
 
