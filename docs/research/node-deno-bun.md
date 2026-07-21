@@ -189,13 +189,42 @@ log-normális/Gamma-eloszlás jobbra ferde maradna akkor is. A `generate_charts.
 rendelkező méretre is elkészíti a hisztogramot, és a normális mellett
 a **log-normális** és a **Gamma**-eloszlást is illeszti rá (momentum-
 módszerrel becsült paraméterekkel), hogy vizuálisan összevethető
-legyen, melyik írja le jobban az alakot:
+legyen, melyik írja le jobban az alakot. A paraméterbecslés **MAD-alapú
+robusztus kiugró-szűrésen** megy át előtte: a sima átlag+szórás
+(momentum-módszer) nem robusztus a kiugró értékekre — egy hosszú, ritka
+farok jelentősen felhúzza a becsült szórást, ami szélesebbé (laposabbá)
+teszi az illesztett görbét, mint amit a hisztogram fő "csomója"
+indokolna. Ez pontosan az a hatás, ami korábban a [3. ábra](#3-abra)
+illesztésénél is látszott: a görbék szélesebbek voltak a hisztogram
+csúcsánál, mint várnánk.
 
 ![Mérési idők eloszlása, nagyobb üzenetméret](../benchmarks/distribution-chart-large.png)
 
 **<a id="4-abra"></a>*4. ábra:*** ugyanaz, mint a [3. ábra](#3-abra),
 de a legnagyobb (kellő mintaszámú) üzenetméretnél, három illesztett
-eloszlással (normális, log-normális, Gamma).
+eloszlással (normális, log-normális, Gamma), robusztus paraméterbecsléssel.
+
+!!! warning "Kettős módus (bimodalitás)"
+    Ha a [4. ábra](#4-abra)-n két, jól elkülönülő csúcs látszik, az nem
+    feltétlenül zaj — lehet valódi, strukturális jelenség. Lehetséges
+    okok: **CPU-frekvenciaváltás/Turbo Boost** (a processzor melegedés
+    vagy energiagazdálkodás miatt vált alap- és turbó-óraszám között
+    egy hosszabb mérési sorozat közben), **JIT-deoptimalizáció** (a V8
+    bizonyos körülmények között visszavált optimalizált kódról
+    interpretált végrehajtásra), vagy **GC-generációk közötti
+    különbség** (egy nagyobb, major garbage collection-nel egybeeső
+    minták szisztematikusan lassabbak). Ennek eldöntéséhez az segít a
+    legtöbbet, hogy a két klaszter mintái **időben (iterációsorrendben)
+    elkülönülnek-e** egymástól:
+
+    ![Kettős módus időbeli mintázata](../benchmarks/distribution-large-timeorder-chart.png)
+
+    **<a id="5-abra-idobeli"></a>*(kiegészítő ábra):*** a [4. ábra](#4-abra)
+    két klasztere, iterációsorrendben ábrázolva (csak akkor jelenik meg,
+    ha a szkript egyértelmű kettős módust talál). Ha a két szín időben
+    elkülönül (pl. eleje-vége), az a CPU-frekvenciaváltást/hőmérsékletet
+    valószínűsíti; ha véletlenszerűen keverednek, inkább a GC a
+    gyanús.
 
 **Miért log-normális/Gamma és nem pl. exponenciális vagy Weibull a
 jelölt?** A mérési idő több, egymást szorzó jellegű késleltetés-forrás

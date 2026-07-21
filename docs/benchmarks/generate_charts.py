@@ -292,6 +292,70 @@ def plot_warmup_illustration():
     print(f"Mentve: {out}")
 
 
+def _plot_distribution_timeorder(rows, size, out_name):
+    """A kettős módus (bimodalitás) diagnosztikájához: megmutatja, hogy a
+    két klaszterbe eső minták időben (iterációsorrendben) elkülönülnek-e
+    egymástól (pl. első fele gyors, második fele lassú -> CPU-frekvencia-
+    váltásra/hőmérsékletre utalna), vagy véletlenszerűen keverednek
+    (inkább GC-re vagy más, iterációtól független hatásra utalna)."""
+    runtime = runtime_key(rows[0]["runtime"])
+    series = [r for r in rows if int(r["size_bytes"]) == size]
+    series.sort(key=lambda r: int(r["sample_index"]))
+    times = [float(r["time_ms"]) for r in series]
+
+    window = 20
+    window_avgs = [
+        sum(times[i:i + window]) / window
+        for i in range(0, len(times) - len(times) % window, window)
+    ]
+    cutoff = 0
+    for i in range(1, len(window_avgs) - 1):
+        change = abs(window_avgs[i] - window_avgs[i - 1]) / window_avgs[i - 1]
+        if change < 0.02:
+            cutoff = i * window
+            break
+
+    idx = list(range(len(times)))[cutoff:]
+    trimmed = times[cutoff:]
+    if len(trimmed) < 10:
+        return
+
+    # legnagyobb-rés (largest-gap) alapú, egyszerű kétklaszteres bontás:
+    # rendezett értékek közötti legnagyobb ugrásnál vágunk ketté - ha
+    # tényleg két módus van, ott lesz a legnagyobb rés
+    sorted_vals = sorted(trimmed)
+    gaps = [(sorted_vals[i + 1] - sorted_vals[i], i) for i in range(len(sorted_vals) - 1)]
+    max_gap, gap_i = max(gaps)
+    split_value = (sorted_vals[gap_i] + sorted_vals[gap_i + 1]) / 2
+    # csak akkor tekintjük érdemi két-módusúnak, ha a rés a teljes
+    # tartomány legalább 15%-a, és mindkét oldalon van legalább néhány pont
+    value_range = sorted_vals[-1] - sorted_vals[0]
+    low_count = sum(1 for v in trimmed if v <= split_value)
+    high_count = len(trimmed) - low_count
+    if value_range == 0 or max_gap < 0.15 * value_range or low_count < 5 or high_count < 5:
+        print(f"Kihagyva: {out_name} (nincs egyértelmű kettős módus)")
+        return
+
+    fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+    low_idx = [i for i, v in zip(idx, trimmed) if v <= split_value]
+    low_vals = [v for v in trimmed if v <= split_value]
+    high_idx = [i for i, v in zip(idx, trimmed) if v > split_value]
+    high_vals = [v for v in trimmed if v > split_value]
+    ax.plot(low_idx, low_vals, ".", color="#5fa052", markersize=5, alpha=0.7,
+             label=f"alsó klaszter (≤{split_value:.2f} ms, n={low_count})")
+    ax.plot(high_idx, high_vals, ".", color="#c0392b", markersize=5, alpha=0.7,
+             label=f"felső klaszter (>{split_value:.2f} ms, n={high_count})")
+    ax.set_xlabel("Iteráció sorszáma (warm-up-cutoff után)")
+    ax.set_ylabel("Titkosítási idő (ms)")
+    ax.set_title(f"Kettős módus időbeli mintázata ({RUNTIME_LABELS[runtime]}, {size} byte)")
+    ax.legend()
+    fig.tight_layout()
+    out = HERE / out_name
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"Mentve: {out}")
+
+
 def _plot_distribution_for_size(rows, size, out_name):
     runtime = runtime_key(rows[0]["runtime"])
     series = [r for r in rows if int(r["size_bytes"]) == size]
@@ -316,13 +380,27 @@ def _plot_distribution_for_size(rows, size, out_name):
         print(f"Kihagyva: {out_name} (túl kevés trimmelt minta: {len(trimmed)})")
         return
 
-    n = len(trimmed)
-    mean = sum(trimmed) / n
-    variance = sum((t - mean) ** 2 for t in trimmed) / (n - 1)
+    # robusztus kiugró-szűrés a PARAMÉTERBECSLÉSHEZ (a hisztogram továbbra
+    # is az összes trimmelt mintát mutatja): a momentum-módszer (átlag+
+    # szórás) nem robusztus a kiugró értékekre - egy hosszú, ritka farok
+    # is jelentősen felhúzza a becsült szórást, ami szélesebbé teszi az
+    # illesztett görbét, mint amit a hisztogram fő "csomója" indokolna.
+    # MAD (medián-abszolút-eltérés) alapján 5*MAD-nál messzebb eső
+    # pontokat kizárjuk a becslésből - ez elég nagy küszöb ahhoz, hogy
+    # egy valódi, sok pontot tartalmazó második módust ne vágjon le,
+    # csak a valóban elszigetelt kiugró értékeket.
+    med = sorted(trimmed)[len(trimmed) // 2]
+    mad = sorted(abs(t - med) for t in trimmed)[len(trimmed) // 2] or 1e-9
+    robust_fit_data = [t for t in trimmed if abs(t - med) <= 5 * 1.4826 * mad]
+    n_excluded = len(trimmed) - len(robust_fit_data)
+
+    n = len(robust_fit_data)
+    mean = sum(robust_fit_data) / n
+    variance = sum((t - mean) ** 2 for t in robust_fit_data) / (n - 1)
     stddev = variance ** 0.5
 
     fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
-    ax.hist(trimmed, bins=20, density=True, color="#5fa052", alpha=0.6, label="trimmelt minták")
+    ax.hist(trimmed, bins=20, density=True, color="#5fa052", alpha=0.6, label="trimmelt minták (mind)")
 
     xs = [mean - 4 * stddev + i * (8 * stddev / 200) for i in range(201)]
     xs = [x for x in xs if x > 0] or [mean * 0.01 * i for i in range(1, 201)]
@@ -359,7 +437,11 @@ def _plot_distribution_for_size(rows, size, out_name):
 
     ax.set_xlabel("Titkosítási idő (ms)")
     ax.set_ylabel("Sűrűség")
-    ax.set_title(f"Mérési idők eloszlása ({RUNTIME_LABELS[runtime]}, {size} byte, n={n}, warm-up nélkül)")
+    excl_note = f", {n_excluded} kiugró kizárva az illesztésből" if n_excluded else ""
+    ax.set_title(
+        f"Mérési idők eloszlása ({RUNTIME_LABELS[runtime]}, {size} byte, "
+        f"n={len(trimmed)}, warm-up nélkül{excl_note})"
+    )
     ax.legend()
     fig.tight_layout()
     out = HERE / out_name
@@ -402,6 +484,7 @@ def plot_distribution():
         well_sampled = [s for s in upper_half if counts[s] >= 100]
         large_size = max(well_sampled) if well_sampled else max(upper_half, key=lambda s: counts[s])
         _plot_distribution_for_size(rows, large_size, "distribution-chart-large.png")
+        _plot_distribution_timeorder(rows, large_size, "distribution-large-timeorder-chart.png")
 
 
 ARROW_COLOR = "#c0392b"
