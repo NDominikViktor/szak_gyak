@@ -63,6 +63,10 @@
 | 2026-07-19 | 21:00 | 21:30 | coding | Log-normális és Gamma eloszlás illesztése (momentum-módszerrel) a hisztogramokra a normális mellé, mintaszám-korlát megjegyzés hozzáadása |
 | 2026-07-19 | 21:30 | 21:50 | coding | Regressziós reziduál-ábra hozzáadása (előjeles relatív hiba méretenként) az 5. táblázat vizuális kiegészítéseként |
 | 2026-07-19 | 21:50 | 22:00 | writing | Munkanapló frissítése |
+| 2026-07-21 | 23:00 | 23:20 | writing | 6. visszajelzési kör: a 3. ábra illesztésének problémája (túl széles görbék) beazonosítva - a momentum-módszer nem robusztus a kiugró értékekre |
+| 2026-07-21 | 23:20 | 23:45 | coding | MAD-alapú robusztus kiugró-szűrés hozzáadása a paraméterbecsléshez (5×1,4826×MAD küszöb), a hisztogram továbbra is minden mintát mutatja |
+| 2026-07-21 | 23:45 | 00:10 | coding | Kettős módus (bimodalitás) diagnosztikai ábra hozzáadása: legnagyobb-rés alapú klaszterezés, iterációsorrendi ábrázolás a CPU-frekvenciaváltás/GC-hipotézisek megkülönböztetéséhez |
+| 2026-07-22 | 00:10 | 00:20 | writing | Munkanapló frissítése |
 
 !!! note "Időbélyegek pontossága"
     A 2026-07-07 és 2026-07-08-i sorok a git commit-időbélyegek alapján lettek
