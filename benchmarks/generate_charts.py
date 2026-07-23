@@ -155,11 +155,16 @@ def plot_regression_residuals():
     """A súlyozott illesztés becsült és a ténylegesen mért idők közötti
     előjeles, relatív eltérését ábrázolja méretenként - ugyanaz a
     'mennyire jó az illesztés' kérdés, mint az 5. táblázat, csak
-    vizuálisan, minden ponthoz."""
+    vizuálisan, minden ponthoz. Az 1 MB fölötti (extrapolációs) zóna
+    vizuálisan is meg van jelölve, hogy az ottani nagy hiba ne tűnjön
+    meglepőnek - a modellt szándékosan sosem kalibráltuk arra."""
     csv_path = latest_or_fallback("latest-run.csv", "encryption-v3-decimal.csv")
     rows = [normalize_row(r) for r in read_csv(csv_path)]
 
     fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+    all_sizes = sorted({int(r["size_bytes"]) for r in rows})
+    ax.axvspan(1_000_000, max(all_sizes) * 1.5, color="#888", alpha=0.12, zorder=0)
+
     for runtime in ("node", "deno", "bun"):
         points = [r for r in rows if r["runtime"] == runtime]
         if not points:
@@ -182,7 +187,7 @@ def plot_regression_residuals():
 
     ax.axhline(0, color="#888", linewidth=1, linestyle="-")
     ax.axvline(1_000_000, color="#888", linewidth=1, linestyle=":")
-    ax.text(1_000_000, ax.get_ylim()[1] * 0.9, " illesztés\n érvényes\n tartománya\n vége →",
+    ax.text(1_000_000, ax.get_ylim()[1] * 0.9, " extrapoláció\n (nem kalibrált\n tartomány) →",
             fontsize=7, color="#888")
     ax.set_xscale("log")
     ax.set_xlabel("Üzenetméret (byte, log skála)")
@@ -192,6 +197,63 @@ def plot_regression_residuals():
     ax.legend()
     fig.tight_layout()
     out = HERE / "regression-residuals-chart.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"Mentve: {out}")
+
+
+def plot_predicted_vs_actual():
+    """Közvetlen, direkt összevetés: minden mérési pontra (méret,
+    futtatókörnyezet) egy pont, x=mért idő, y=becsült (modell szerinti)
+    idő. A 45 fokos átlós vonal a tökéletes illesztést jelöli - minél
+    közelebb egy pont az átlóhoz, annál pontosabb ott a becslés. Ez egy
+    egyszerűbb, direktebb összevetés, mint a relatív hiba - itt nem kell
+    a hiba előjelét/nagyságrendjét fejben átszámolni."""
+    csv_path = latest_or_fallback("latest-run.csv", "encryption-v3-decimal.csv")
+    rows = [normalize_row(r) for r in read_csv(csv_path)]
+
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=150)
+    all_actual, all_pred = [], []
+
+    for runtime in ("node", "deno", "bun"):
+        points = [r for r in rows if r["runtime"] == runtime]
+        if not points:
+            continue
+        points.sort(key=lambda r: int(r["size_bytes"]))
+        sizes = [int(r["size_bytes"]) for r in points]
+        avgs = [float(r["avg_ms"]) for r in points]
+
+        n_pts = len(sizes)
+        X = [1 / s for s in sizes]
+        Y = [t / s for s, t in zip(sizes, avgs)]
+        mean_x = sum(X) / n_pts
+        mean_y = sum(Y) / n_pts
+        a = sum((x - mean_x) * (y - mean_y) for x, y in zip(X, Y)) / sum((x - mean_x) ** 2 for x in X)
+        b = mean_y - a * mean_x
+        pred = [a + b * s for s in sizes]
+
+        marker = "o"
+        for s, t, p in zip(sizes, avgs, pred):
+            m = "s" if s > 1_000_000 else marker  # extrapolált pontok négyzettel jelölve
+            ax.scatter(t, p, color=RUNTIME_COLORS[runtime], marker=m, s=50,
+                       edgecolors="white", linewidths=0.5, zorder=3)
+        ax.scatter([], [], color=RUNTIME_COLORS[runtime], marker="o", label=RUNTIME_LABELS[runtime])
+        all_actual += avgs
+        all_pred += pred
+
+    lim_max = max(all_actual + all_pred) * 1.1
+    ax.plot([0, lim_max], [0, lim_max], "--", color="#888", linewidth=1.2, label="tökéletes becslés (y=x)", zorder=1)
+    ax.scatter([], [], color="#666", marker="s", label="1 MB fölötti (extrapolált) pont")
+
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Mért idő (ms, log skála)")
+    ax.set_ylabel("Becsült (modell szerinti) idő (ms, log skála)")
+    ax.set_title("Elvárt (becsült) vs. kapott (mért) érték - súlyozott illesztés")
+    ax.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.6)
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    out = HERE / "predicted-vs-actual-chart.png"
     fig.savefig(out)
     plt.close(fig)
     print(f"Mentve: {out}")
@@ -413,11 +475,16 @@ def _plot_distribution_for_size(rows, size, out_name):
     ax.plot(xs, ys_norm, "-", color=ARROW_COLOR, linewidth=1.8,
              label=f"normális (μ={mean:.3f}, σ={stddev:.3f})")
 
-    # log-normális (momentum-módszer): a nyers átlag/szórásból vezetjük le
-    # a log-térbeli mu/sigma paramétereket
-    ln_sigma2 = math.log(1 + variance / mean ** 2)
+    # log-normális: STANDARD log-térbeli MLE, nem a nyers térbeli
+    # momentumokból levezetve (az utóbbi torzabb, ha a nyers adat maga
+    # is erősen ferde - ami itt pont a helyzet). Egyszerűen: vegyük az
+    # összes minta logaritmusát, és illesszünk rá normális eloszlást -
+    # ez pontosan a log-normális MLE-je.
+    log_vals = [math.log(t) for t in robust_fit_data if t > 0]
+    n_log = len(log_vals)
+    ln_mu = sum(log_vals) / n_log
+    ln_sigma2 = sum((lv - ln_mu) ** 2 for lv in log_vals) / (n_log - 1)
     ln_sigma = ln_sigma2 ** 0.5
-    ln_mu = math.log(mean) - ln_sigma2 / 2
     ys_lognorm = [
         (1 / (x * ln_sigma * (2 * math.pi) ** 0.5)) * math.exp(-((math.log(x) - ln_mu) ** 2) / (2 * ln_sigma2))
         for x in xs
@@ -425,9 +492,15 @@ def _plot_distribution_for_size(rows, size, out_name):
     ax.plot(xs, ys_lognorm, "-", color="#2b6cb0", linewidth=1.8,
              label=f"log-normális (μ={ln_mu:.3f}, σ={ln_sigma:.3f})")
 
-    # Gamma-eloszlás (momentum-módszer): shape k, scale theta
-    k_shape = mean ** 2 / variance
-    theta_scale = variance / mean
+    # Gamma-eloszlás: Thom-közelítéses MLE (nem momentum-módszer) - ez a
+    # standard, közelítő zárt alakú MLE ferde adatokra, digamma-függvény
+    # nélkül is jóval pontosabb, mint az egyszerű momentum-illesztés.
+    s = math.log(mean) - sum(log_vals) / n_log
+    if s <= 0:
+        k_shape = mean ** 2 / variance  # visszaesés momentum-módszerre, ha s degenerált
+    else:
+        k_shape = (3 - s + math.sqrt((s - 3) ** 2 + 24 * s)) / (12 * s)
+    theta_scale = mean / k_shape
     ys_gamma = [
         (x ** (k_shape - 1) * math.exp(-x / theta_scale)) / (theta_scale ** k_shape * math.gamma(k_shape))
         for x in xs
@@ -492,6 +565,7 @@ ARROW_COLOR = "#c0392b"
 if __name__ == "__main__":
     plot_encryption_chart()
     plot_regression_residuals()
+    plot_predicted_vs_actual()
     plot_warmup_chart()
     plot_warmup_illustration()
     plot_distribution()

@@ -1067,10 +1067,11 @@ mutatja. A gyakorlatban legalább három hibaosztályt kell kezelni:</p>
 </ul>
 </div>
 <p>A <a href="#2-abra">2. ábra</a> ugyanezt a három hibaesetet folyamatábraként,
-döntési pontokként mutatja — minden elágazás egy rombusz (döntési
-csomópont) kimenete, a hibaágak sem kivételek: a fogadó oldali
-dekódolási hiba is egy külön döntési ponton keresztül vezet a
-helyreállítási lépéshez, nem közvetlenül egy műveleti dobozból:</p>
+szabványos jelölésekkel mutatja: lekerekített ("stadion") alak a
+kezdő-/végpontoknak, téglalap a műveleteknek, rombusz a döntéseknek,
+kis kör pedig az összefutó ágak gyűjtőpontjának (ahol az "azonnali
+kézbesítés" és az "offline tárolás" ág újra egyesül, mielőtt a fogadó
+oldali dekódolás-ellenőrzéshez érne):</p>
 <pre class="mermaid"><code>%%{init: {"theme": "base", "themeVariables": {
   "lineColor": "#e6e6e6",
   "textColor": "#f0f3f7",
@@ -1079,19 +1080,23 @@ helyreállítási lépéshez, nem közvetlenül egy műveleti dobozból:</p>
   "clusterBkg": "#1f2937"
 }}}%%
 flowchart TD
-    A[Üzenet küldése] --&gt; B{Van aktív&lt;br/&gt;Double Ratchet&lt;br/&gt;session?}
+    START([Üzenet küldése]) --&gt; B{Van aktív&lt;br/&gt;Double Ratchet&lt;br/&gt;session?}
     B --&gt;|igen| C[Titkosítás,&lt;br/&gt;ratchet-lépés]
     B --&gt;|nem| D{Van elérhető&lt;br/&gt;PreKey a bundle-ben?}
     D --&gt;|igen| E[X3DH kulcscsere,&lt;br/&gt;session létrehozása]
     D --&gt;|nem| F[Hiba: bundle frissítés&lt;br/&gt;szükséges]
+    F --&gt; END1([Vége])
     E --&gt; C
     C --&gt; G{Címzett&lt;br/&gt;online?}
     G --&gt;|igen| H[Azonnali kézbesítés]
     G --&gt;|nem| I[Offline tárolás,&lt;br/&gt;kézbesítés bejelentkezéskor]
-    H --&gt; K{Fogadó oldali&lt;br/&gt;dekódolás sikeres?}
-    I --&gt; K
+    H --&gt; MERGE((" "))
+    I --&gt; MERGE
+    MERGE --&gt; K{Fogadó oldali&lt;br/&gt;dekódolás sikeres?}
     K --&gt;|igen| L[Üzenet megjelenítve&lt;br/&gt;+ receipt]
-    K --&gt;|nem| J[Session invalid,&lt;br/&gt;új X3DH indítása]</code></pre>
+    L --&gt; END2([Vége])
+    K --&gt;|nem| J[Session invalid,&lt;br/&gt;új X3DH indítása]
+    J --&gt; END3([Vége])</code></pre>
 <p><strong><a id="2-abra"></a>2. ábra:</strong> OMEMO üzenetküldés döntési logikája, a
 hibaágakkal.</p>
 <div class="admonition note">

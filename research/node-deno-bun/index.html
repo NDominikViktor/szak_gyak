@@ -1374,6 +1374,16 @@ ha a szkript egyértelmű kettős módust talál). Ha a két szín időben
 elkülönül (pl. eleje-vége), az a CPU-frekvenciaváltást/hőmérsékletet
 valószínűsíti; ha véletlenszerűen keverednek, inkább a GC a
 gyanús.</p>
+<p><strong>Elvi korlát, amit érdemes tudatosítani:</strong> ha a mérés valóban két
+(vagy több) különálló üzemmódból (pl. "gyors GC-mentes szakasz" és
+"lassabb, GC-vel terhelt szakasz") tevődik össze, akkor egyetlen
+<strong>unimodális</strong> (egycsúcsú) eloszlás — legyen az normális,
+log-normális vagy Gamma — elvileg sem tud jól illeszkedni rá,
+bármennyire is finomítjuk a paraméterbecslést. Egy ilyen adatra a
+helyes modell egy <strong>kevert eloszlás (mixture model)</strong> lenne, pl.
+két Gamma-eloszlás súlyozott keveréke — ez viszont már túlmutat a
+jelen dokumentáció keretein, inkább egy lehetséges további
+finomítási irány.</p>
 </div>
 <p><strong>Miért log-normális/Gamma és nem pl. exponenciális vagy Weibull a
 jelölt?</strong> A mérési idő több, egymást szorzó jellegű késleltetés-forrás
@@ -1574,10 +1584,37 @@ ténylegesen mért idők közötti eltérés méretenként.</p>
 <li>1 MB fölött egyik runtime-nál sem használjuk a modellt — ott a nyers
   mérési pontok (ld. <a href="#5-abra">5. ábra</a>) a megbízható forrás.</li>
 </ul>
-<p>Ugyanez az 5. táblázat vizuálisan, minden mérési pontra kiterjesztve:</p>
+<p>Ugyanez az 5. táblázat vizuálisan, minden mérési pontra kiterjesztve —
+a szürke sáv az 1 MB fölötti, <strong>nem kalibrált (extrapolált)</strong>
+tartományt jelöli, hogy az ottani nagy hiba ne tűnjön meglepőnek:</p>
 <p><img alt="Regressziós reziduálok" src="../../benchmarks/regression-residuals-chart.png" /></p>
 <p><strong><a id="6-abra"></a>6. ábra:</strong> a súlyozott illesztés előjeles relatív
 hibája méretenként.</p>
+<p>A relatív hiba mellett egy közvetlenebb összevetés: minden mérési
+pontra egy pont, x=mért, y=becsült idő — minél közelebb az átlós
+(y=x) vonalhoz, annál pontosabb a becslés ott. A négyzet alakú
+pontok az 1 MB fölötti, extrapolált (nem kalibrált) méretek:</p>
+<p><img alt="Elvárt vs. kapott érték" src="../../benchmarks/predicted-vs-actual-chart.png" /></p>
+<p><strong><a id="7-abra"></a>7. ábra:</strong> becsült (modell szerinti) vs. ténylegesen
+mért titkosítási idő, log-log skálán.</p>
+<div class="admonition question">
+<p class="admonition-title">Konzisztens ez több mérésen keresztül?</p>
+<p>A <a href="#6-abra">6. ábra</a>-n látható, hogy 1 MB fölött (extrapolált
+tartomány) néha nagyon nagy (akár 300% közeli) relatív hibák is
+előfordulnak Node.js-nél és Bun-nál. <strong>Ezt őszintén: még nem
+ellenőriztük szisztematikusan több független mérésen keresztül</strong> —
+eddig lényegében egy-egy pipeline-futtatás eredményét néztük meg
+egyszerre. Mivel az 1 MB fölötti tartományban a modellt sosem
+kalibráltuk (ld. fent), ott a nagy hiba önmagában nem meglepő és
+nem feltétlenül hibajel — de hogy a hiba <em>nagysága/iránya</em>
+mennyire stabil mérésről mérésre (vagy inkább a mérési zaj, pl. a
+korábban látott kettős módus következménye), az csak több,
+egymástól független futtatás összevetésével dönthető el
+megbízhatóan. Ez konkrét, elvégezhető következő lépés: a
+<code>run-pipeline.mjs</code> több egymást követő futtatásából a
+<code>latest-run.csv</code> eredményeit el kellene menteni (pl. időbélyeges
+fájlnévvel), és azokat együtt kiértékelni.</p>
+</div>
 <p>A titkosítási chart-on (<a href="#5-abra">5. ábra</a>) ezért a szaggatott illesztési
 vonal is csak 1 MB-ig van kirajzolva, hogy a fölötte lévő, ismerten
 pontatlan extrapoláció ne tűnjön félrevezető módon "illeszkedő"
